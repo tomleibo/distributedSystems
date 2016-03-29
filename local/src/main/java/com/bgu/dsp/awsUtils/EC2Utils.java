@@ -1,4 +1,4 @@
-package com.bgu.dsp;
+package com.bgu.dsp.awsUtils;
 
 /**
  * Created by thinkPAD on 3/29/2016.
