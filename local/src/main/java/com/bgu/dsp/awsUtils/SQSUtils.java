@@ -4,6 +4,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
+import org.apache.log4j.Logger;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
  * Created by thinkPAD on 3/29/2016.
  */
 public class SQSUtils {
+    final static Logger logger = Logger.getLogger(SQSUtils.class);
 
     private static AmazonSQS sqs;
     static {
@@ -51,6 +53,13 @@ public class SQSUtils {
         AWSCredentials credentials = Utils.getAwsCredentials();
         sqs = new AmazonSQSClient(credentials);
         sqs.setRegion(Utils.region);
+        if ("DEV".equals(System.getenv("DSP_MODE"))){
+            String host = "localhost";
+            int port = 4568;
+            String URL = "http://" + host + ":" + port;
+            logger.info("Using development SQS with url " + URL);
+            sqs.setEndpoint(URL);
+        }
     }
 
 

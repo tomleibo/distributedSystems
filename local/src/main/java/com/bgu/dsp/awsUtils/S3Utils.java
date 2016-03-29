@@ -2,8 +2,10 @@ package com.bgu.dsp.awsUtils;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.Base64;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 public class S3Utils {
     private static AmazonS3Client s3;
+    final static Logger logger = Logger.getLogger(S3Utils.class);
 
     static {
         init();
@@ -29,6 +32,15 @@ public class S3Utils {
         AWSCredentials credentials = Utils.getAwsCredentials();
         s3 = new AmazonS3Client(credentials);
         s3.setRegion(Utils.region);
+
+        if ("DEV".equals(System.getenv("DSP_MODE"))){
+            String host = "localhost";
+            int port = 4567;
+            String URL = "http://" + host + ":" + port;
+            s3.setEndpoint(URL);
+            s3.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
+            logger.info("Using development S3 with url " + URL);
+        }
     }
 
     /**
