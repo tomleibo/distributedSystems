@@ -3,3 +3,8 @@ dsp assign 1:
 2. Hands on AWS-SDK - Tom
 3. local impl - Tom
 4. Manager
+
+
+Fixme: S3utils.uploadFile method. MD5 doesn't match.
+Todo: S3Tests assert downloaded and uploaded files are identical
+TODO: add md5 check on Sqs.sendMessage

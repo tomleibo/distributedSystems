@@ -10,7 +10,7 @@ import com.amazonaws.regions.Regions;
  * Created by thinkPAD on 3/29/2016.
  */
 public class Utils {
-    public static Region region = Region.getRegion(Regions.US_EAST_1);;
+    public static Region region = Region.getRegion(Regions.US_EAST_1);
 
     public static AWSCredentials getAwsCredentials() {
         AWSCredentials credentials = null;
