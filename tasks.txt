@@ -1,0 +1,5 @@
+dsp assign 1:
+1. research on local mock ups for SQS,EC2,S3 - hagai
+2. Hands on AWS-SDK - Tom
+3. local impl - Tom
+4. Manager
