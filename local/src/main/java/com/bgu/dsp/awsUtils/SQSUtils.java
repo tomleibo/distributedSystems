@@ -1,18 +1,11 @@
 package com.bgu.dsp.awsUtils;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * Created by thinkPAD on 3/29/2016.
