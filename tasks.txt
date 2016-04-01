@@ -8,3 +8,5 @@ dsp assign 1:
 Fixme: S3utils.uploadFile method. MD5 doesn't match.
 Todo: S3Tests assert downloaded and uploaded files are identical
 TODO: add md5 check on Sqs.sendMessage
+add mock to EC2
+Ec2 Tests
