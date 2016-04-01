@@ -6,9 +6,13 @@ import com.amazonaws.services.ec2.model.*;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class EC2Utils {
 
+	private static final String WORKER_IMAGE_ID = "ami-b66ed3de";
+	public static final String WORKERS_SECURITY_GROUP = "workers";
 	private static int
 			STATE_CODE_PENDING = 0,
 			STATE_CODE_RUNNING = 16,
@@ -70,6 +74,75 @@ public class EC2Utils {
 		}
 
 		return instanceCount;
+	}
+
+	/**
+	 * Start n workers and wait for them to be in "Running" status
+	 */
+	public static void startWorkersAndWait(int n){
+		List<String> ids = startWorkers(n);
+		waitForRunning(ids);
+	}
+
+	/**
+	 * Start n workers
+	 * @see #startWorkersAndWait
+	 */
+	private static List<String> startWorkers(int n){
+		// TODO create a workers security group in AWS
+		RunInstancesRequest request = new RunInstancesRequest().
+				withImageId(WORKER_IMAGE_ID).
+				withMinCount(n).
+				withMaxCount(n).
+				withSecurityGroups(WORKERS_SECURITY_GROUP).
+				withInstanceType(InstanceType.T2Micro);
+		RunInstancesResult runInstancesResult = ec2.runInstances(request);
+
+		List<String> instancesIds = runInstancesResult.getReservation().getInstances().stream().map(Instance::getInstanceId).collect(Collectors.toList());
+		return instancesIds;
+	}
+
+	/**
+	 * Wait for a list of instances
+	 */
+	private static void waitForRunning(List<String> instancesIds){
+		logger.debug("Waiting for " + instancesIds.size() + " machines to start");
+		long startTime = System.currentTimeMillis();
+
+		boolean allRunning = false;
+
+		while (!allRunning) {
+			DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
+			describeInstancesRequest.setInstanceIds(instancesIds);
+			DescribeInstancesResult describeInstancesResult = ec2.describeInstances(describeInstancesRequest);
+
+			allRunning = checkIfAllRunning(describeInstancesResult);
+
+			if (! allRunning) {
+				try {
+					Thread.sleep(3 * 1000);
+				} catch (InterruptedException e) {
+					//continue
+				}
+			}
+		}
+
+		long end = System.currentTimeMillis();
+		logger.debug("Waited for instances to start " + (end-startTime) + " milliseconds");
+	}
+
+	/**
+	 * Return true only if all the instances are running
+	 */
+	private static boolean checkIfAllRunning(DescribeInstancesResult describeInstancesResult) {
+		for (Reservation reservation : describeInstancesResult.getReservations()) {
+			for (Instance instance : reservation.getInstances()) {
+				if (instance.getState().getCode() != STATE_CODE_RUNNING){
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 }
