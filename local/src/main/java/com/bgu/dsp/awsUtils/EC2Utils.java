@@ -72,9 +72,4 @@ public class EC2Utils {
 		return instanceCount;
 	}
 
-	public static void main(String[] args) {
-		System.out.println(countWorkers());
-	}
-
-
 }
