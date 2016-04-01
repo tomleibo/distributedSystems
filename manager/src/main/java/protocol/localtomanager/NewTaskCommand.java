@@ -1,20 +1,26 @@
-package SQSCommands;
+package protocol.localtomanager;
 
 import com.amazonaws.util.IOUtils;
+import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
+import com.bgu.dsp.awsUtils.SQSUtils;
 import org.apache.log4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Created by hagai_lvi on 30/03/2016.
  */
-public class NewTaskCommand implements SQSCommand {
+public class NewTaskCommand implements LocalToManagerCommand {
 
 	final static Logger logger = Logger.getLogger(NewTaskCommand.class);
+	private static final String WORKERS_QUEUE_RUL = "";
+	public static final String MANAGER_WORKERS_QUEUE_NAME = "manager-workers-queue";
 	private final double linesPerWorker = 100.0;//TODO
 	private final String bucketName;
 	private final String key;
@@ -25,15 +31,40 @@ public class NewTaskCommand implements SQSCommand {
 	}
 	public void execute() {
 		String fileContent = getFileContent();
-
-		double numOfWorkers = getNumOfWorkers(fileContent);
-
-		logger.info("Using " + numOfWorkers + " workers overall");
+		startWorkers(fileContent);
+		postTweetsToQueue(fileContent);
 	}
 
-	private double getNumOfWorkers(String fileContent) {
+	private void postTweetsToQueue(String fileContent) {
+
+		// TODO what happens if the queue already exist?!
+		String queueUrl = SQSUtils.createQueue(MANAGER_WORKERS_QUEUE_NAME);
+
+		BufferedReader bufReader = new BufferedReader(new StringReader(fileContent));
+
+		String line;
+
+		try {
+			while( (line = bufReader.readLine()) != null ) {
+				SQSUtils.sendMessage(queueUrl, line);
+			}
+		} catch (IOException e) {
+			logger.warn(e);
+		}
+
+	}
+
+	private void startWorkers(String fileContent) {
+		int numOfWorkers = getNumOfWorkers(fileContent);
+		int currentNumOfWorkers = EC2Utils.countWorkers();
+		int workersToStart = numOfWorkers - currentNumOfWorkers;
+		logger.info(currentNumOfWorkers + " workers are running\n" +
+				"Starting " + workersToStart + " more workers for total of " + numOfWorkers + " workers.");
+	}
+
+	private int getNumOfWorkers(String fileContent) {
 		int numberOfLines = countLines(fileContent);
-		return Math.ceil(numberOfLines / linesPerWorker);
+		return (int)Math.ceil(numberOfLines / linesPerWorker);
 	}
 
 	private String getFileContent() {

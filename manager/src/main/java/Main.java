@@ -1,4 +1,4 @@
-import SQSCommands.SQSCommand;
+import protocol.localtomanager.LocalToManagerCommand;
 
 /**
  * Created by hagai_lvi on 30/03/2016.
@@ -9,7 +9,7 @@ public class Main {
 	public static void main(String[] args) {
 		SQSHandler sqsHandler = new SQSHandler();
 		while (true){
-			SQSCommand commandFromQueue = sqsHandler.getCommandFromQueue(QUEUE_URL);
+			LocalToManagerCommand commandFromQueue = sqsHandler.getCommandFromQueue(QUEUE_URL);
 			if (commandFromQueue != null) {
 				commandFromQueue.execute();
 			}else{

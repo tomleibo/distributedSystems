@@ -4,13 +4,11 @@ import com.bgu.dsp.awsUtils.S3Utils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import protocol.localtomanager.NewTaskCommand;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-/**
- * Created by hagai_lvi on 30/03/2016.
- */
 public class NewTaskCommandTest {
 
 	private String bucketName, key;

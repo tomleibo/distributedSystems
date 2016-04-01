@@ -1,9 +1,9 @@
-import SQSCommands.SQSCommand;
+import protocol.localtomanager.LocalToManagerCommand;
 import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import org.apache.log4j.Logger;
 import protocol.MalformedMessageException;
-import protocol.SQSProtocol;
+import protocol.localtomanager.LocalToManagerSQSProtocol;
 
 /**
  * Handles all manager interaction with AWS SQS
@@ -12,11 +12,11 @@ import protocol.SQSProtocol;
 public class SQSHandler {
 	private final static Logger logger = Logger.getLogger(SQSHandler.class);
 
-	public SQSCommand getCommandFromQueue(String queueURL){
+	public LocalToManagerCommand getCommandFromQueue(String queueURL){
 		Message message = SQSUtils.getMessage(queueURL);
 
 		try {
-			return SQSProtocol.parse(message.getBody());
+			return LocalToManagerSQSProtocol.parse(message.getBody());
 		} catch (MalformedMessageException e) {
 			logger.error("Malformed message recieved from the queue.\n" +
 					"queueUrl = " + queueURL, e);
