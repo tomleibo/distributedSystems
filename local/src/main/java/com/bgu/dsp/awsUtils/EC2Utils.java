@@ -1,178 +1,148 @@
 package com.bgu.dsp.awsUtils;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.*;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class EC2Utils {
-    private static final long SLEEP_CYCLE = 60000;
-    private static AmazonEC2 ec2 = null;
+
+	private static final String WORKER_IMAGE_ID = "ami-b66ed3de";
+	public static final String WORKERS_SECURITY_GROUP = "workers";
+	private static int
+			STATE_CODE_PENDING = 0,
+			STATE_CODE_RUNNING = 16,
+			STATE_CODE_SHUTTING_DOWN = 32,
+			STATE_CODE_TERMINATED = 48,
+			STATE_CODE_STOPPING = 64,
+			STATE_CODE_STOPPED = 80;
+
+	private static AmazonEC2Client ec2;
+	final static Logger logger = Logger.getLogger(EC2Utils.class);
+
+	static {
+		init();
+	}
+
+	public static void init() {
+		AWSCredentials credentials = Utils.getAwsCredentials();
+		ec2 = new AmazonEC2Client(credentials);
+		ec2.setRegion(Utils.region);
+	}
+
+	/**
+	 * Count machines who's name matches *worker* and that are either pending or running
+	 * @return
+	 */
+	public static int countWorkers(){
+		int instanceCount = 0;
+		DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
+
+		ArrayList<Filter> filters = new ArrayList<>();
+
+		// Filter only for running or pending nodes
+		ArrayList<String> stateFilterValues = new ArrayList<>();
+		stateFilterValues.add(Integer.toString(STATE_CODE_PENDING));
+		stateFilterValues.add(Integer.toString(STATE_CODE_RUNNING));
+		Filter stateFilter = new Filter("instance-state-code", stateFilterValues);
+		filters.add(stateFilter);
+
+		// Filter only for nodes called *worker*
+		ArrayList<String> nameFilterValues = new ArrayList<>();
+		nameFilterValues.add("*worker*");
+		Filter nameFilter = new Filter("tag:Name", nameFilterValues);
+		filters.add(nameFilter);
+
+		describeInstancesRequest.setFilters(filters);
 
 
 
-    static {
-        init();
-    }
+		DescribeInstancesResult describeInstancesResult = ec2.describeInstances(describeInstancesRequest);
+		for (Reservation reservation : describeInstancesResult.getReservations()) {
+			for (Instance instance : reservation.getInstances()) {
+				System.out.println(instance);
+				if (instance.getState().getCode() == STATE_CODE_PENDING ||
+						instance.getState().getCode() == STATE_CODE_RUNNING){
+					System.out.println(instance.getTags());
+					instanceCount++;
+				}
+			}
+		}
 
-    public static void main(String[] args) throws Exception {
+		return instanceCount;
+	}
 
-        try {
-            Collection<String> securityGroups = Arrays.asList(new String[]{"default"});
-            List<String> requestIds = submitRequests("0.03", Integer.valueOf(1), "ami-8c1fece5", "t1.micro", securityGroups);
+	/**
+	 * Start n workers and wait for them to be in "Running" status
+	 */
+	public static void startWorkersAndWait(int n){
+		List<String> ids = startWorkers(n);
+		waitForRunning(ids);
+	}
 
-            // Loop through all of the instanceRequests until all bids are in the active state
-            // (or at least not in the open state).
-            boolean isOpen = false;
-            List<SpotInstanceRequest> requests=null;
-            List<String> activeInsanceIds = new ArrayList<>();
-            do {
-                // Sleep for 60 seconds.
-                Thread.sleep(SLEEP_CYCLE);
-                requests = getDeliveredInstanceRequestsByIds(requestIds);
+	/**
+	 * Start n workers
+	 * @see #startWorkersAndWait
+	 */
+	private static List<String> startWorkers(int n){
+		// TODO create a workers security group in AWS
+		RunInstancesRequest request = new RunInstancesRequest().
+				withImageId(WORKER_IMAGE_ID).
+				withMinCount(n).
+				withMaxCount(n).
+				withSecurityGroups(WORKERS_SECURITY_GROUP).
+				withInstanceType(InstanceType.T2Micro);
+		RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
-                for (SpotInstanceRequest request : requests) {
-                    if (request.getState().equals("open")) {
-                        isOpen=true;
-                    }
-                    else if (request.getState().equals("active")) {
-                        activeInsanceIds.add(request.getInstanceId());
-                    }
-                }
-            } while (isOpen);
+		List<String> instancesIds = runInstancesResult.getReservation().getInstances().stream().map(Instance::getInstanceId).collect(Collectors.toList());
+		return instancesIds;
+	}
 
+	/**
+	 * Wait for a list of instances
+	 */
+	private static void waitForRunning(List<String> instancesIds){
+		logger.debug("Waiting for " + instancesIds.size() + " machines to start");
+		long startTime = System.currentTimeMillis();
 
-            // Cancel all instanceRequests and terminate all running instances.
-            cleanup(requestIds,activeInsanceIds);
+		boolean allRunning = false;
 
-        } catch (AmazonServiceException ase) {
-            // Write out any exceptions that may have occurred.
-            System.out.println("Caught Exception: " + ase.getMessage());
-            System.out.println("Reponse Status Code: " + ase.getStatusCode());
-            System.out.println("Error Code: " + ase.getErrorCode());
-            System.out.println("Request ID: " + ase.getRequestId());
-        }
-    }
+		while (!allRunning) {
+			DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
+			describeInstancesRequest.setInstanceIds(instancesIds);
+			DescribeInstancesResult describeInstancesResult = ec2.describeInstances(describeInstancesRequest);
 
-    public static void init() {
-        ec2 = new AmazonEC2Client(Utils.getAwsCredentials());
-        ec2.setRegion(Utils.region);
-    }
+			allRunning = checkIfAllRunning(describeInstancesResult);
 
-    /**
-     * @param spotPrice (0.03)
-     * @param instanceCount 1
-     * @param imageId ("ami-8c1fece5")
-     * @param instanceType "t1.micro"
-     * @param securityGroups ["GettingStartedGroup"]
-     * @return request Ids as string list.
-     */
-    public static List<String> submitRequests(String spotPrice, Integer instanceCount, String imageId, String instanceType, Collection<String> securityGroups) {
-        // Initializes a Spot Instance Request
-        RequestSpotInstancesRequest requestRequest = new RequestSpotInstancesRequest();
-        requestRequest.setSpotPrice(spotPrice);
-        requestRequest.setInstanceCount(instanceCount);
+			if (! allRunning) {
+				try {
+					Thread.sleep(3 * 1000);
+				} catch (InterruptedException e) {
+					//continue
+				}
+			}
+		}
 
-        // Setup the specifications of the launch. This includes the instance type (e.g. t1.micro)
-        // and the latest Amazon Linux AMI id available. Note, you should always use the latest
-        // Amazon Linux AMI id or another of your choosing.
-        LaunchSpecification launchSpecification = new LaunchSpecification();
-        launchSpecification.setImageId(imageId);
-        launchSpecification.setInstanceType(instanceType);
-        launchSpecification.setSecurityGroups(securityGroups);
-        requestRequest.setLaunchSpecification(launchSpecification);
+		long end = System.currentTimeMillis();
+		logger.debug("Waited for instances to start " + (end-startTime) + " milliseconds");
+	}
 
-        // Call the RequestSpotInstance API.
-        RequestSpotInstancesResult requestResult = ec2.requestSpotInstances(requestRequest);
-        List<SpotInstanceRequest> requestResponses = requestResult.getSpotInstanceRequests();
-
-        List<String> spotInstanceRequestIds = new ArrayList<>();
-        for (SpotInstanceRequest requestResponse : requestResponses) {
-            System.out.println("Created Spot Request: " + requestResponse.getSpotInstanceRequestId());
-            spotInstanceRequestIds.add(requestResponse.getSpotInstanceRequestId());
-        }
-        return spotInstanceRequestIds;
-    }
-
-    /**
-     * The areOpen method will determine if any of the instanceRequests that were started are still
-     * in the open state. If all of them have transitioned to either active, cancelled, or
-     * closed, then this will return false.
-     *
-     * @return
-     */
-    public static List<SpotInstanceRequest> getDeliveredInstanceRequestsByIds(List<String> spotInstanceRequestIds) {
-        List<SpotInstanceRequest> instanceRequests = new ArrayList<>();
-
-        // Create the describeRequest with tall of the request id to monitor (e.g. that we started).
-        DescribeSpotInstanceRequestsRequest describeRequest = new DescribeSpotInstanceRequestsRequest();
-        describeRequest.setSpotInstanceRequestIds(spotInstanceRequestIds);
-
-        try {
-            // Retrieve all of the instanceRequests we want to monitor.
-            DescribeSpotInstanceRequestsResult describeResult = ec2.describeSpotInstanceRequests(describeRequest);
-            List<SpotInstanceRequest> describeResponses = describeResult.getSpotInstanceRequests();
-
-            // Look through each request and determine if they are all in the active state.
-            for (SpotInstanceRequest describeResponse : describeResponses) {
-                System.out.println(" " + describeResponse.getSpotInstanceRequestId() +
-                        " is in the " + describeResponse.getState() + " state.");
-                instanceRequests.add(describeResponse);
-            }
-        } catch (AmazonServiceException e) {
-            // Print out the error.
-            System.out.println("Error when calling describeSpotInstances");
-            System.out.println("Caught Exception: " + e.getMessage());
-            System.out.println("Reponse Status Code: " + e.getStatusCode());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Request ID: " + e.getRequestId());
-        }
-        return instanceRequests;
-    }
-
-    public static void cleanup(List<String> spotInstanceRequestIds, List<String> activeInstanceIds) {
-        cancelRequestsByIds(spotInstanceRequestIds);
-        terminateInstancesByIds(activeInstanceIds);
-    }
-
-    public static void terminateInstancesByIds(List<String> activeInstanceIds) {
-        try {
-            // Terminate instances.
-            System.out.println("Terminate instances");
-            TerminateInstancesRequest terminateRequest = new TerminateInstancesRequest(activeInstanceIds);
-            ec2.terminateInstances(terminateRequest);
-        } catch (AmazonServiceException e) {
-            // Write out any exceptions that may have occurred.
-            System.out.println("Error terminating instances");
-            System.out.println("Caught Exception: " + e.getMessage());
-            System.out.println("Reponse Status Code: " + e.getStatusCode());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Request ID: " + e.getRequestId());
-        }
-    }
-
-    public static void cancelRequestsByIds(List<String> spotInstanceRequestIds) {
-        try {
-            // Cancel instanceRequests.
-            System.out.println("Cancelling instanceRequests.");
-            CancelSpotInstanceRequestsRequest cancelRequest = new CancelSpotInstanceRequestsRequest(spotInstanceRequestIds);
-            ec2.cancelSpotInstanceRequests(cancelRequest);
-        } catch (AmazonServiceException e) {
-            // Write out any exceptions that may have occurred.
-            System.out.println("Error cancelling instances");
-            System.out.println("Caught Exception: " + e.getMessage());
-            System.out.println("Reponse Status Code: " + e.getStatusCode());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Request ID: " + e.getRequestId());
-        }
-    }
+	/**
+	 * Return true only if all the instances are running
+	 */
+	private static boolean checkIfAllRunning(DescribeInstancesResult describeInstancesResult) {
+		for (Reservation reservation : describeInstancesResult.getReservations()) {
+			for (Instance instance : reservation.getInstances()) {
+				if (instance.getState().getCode() != STATE_CODE_RUNNING){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
 }
-
-
-

@@ -34,6 +34,25 @@ public class SQSUtils {
         return sqs.receiveMessage(receiveMessageRequest).getMessages();
     }
 
+	/**
+	 * Return a single message if exists in the queue, otherwise return null
+     */
+    public static Message getMessage(String queueUrl){
+        ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl)
+                .withMaxNumberOfMessages(1);
+
+        List<Message> messages = sqs.receiveMessage(queueUrl).getMessages();
+
+        // We asked maxNumberOfMessages=1
+        assert messages.size() <= 1;
+
+        if (messages.size() > 0){
+            return messages.get(0);
+        }else{
+            return null;
+        }
+    }
+
     public static boolean sendMessage(String queueUrl, String messageBody) {
         sqs.sendMessage(new SendMessageRequest(queueUrl, messageBody));
         //TODO md5 check
