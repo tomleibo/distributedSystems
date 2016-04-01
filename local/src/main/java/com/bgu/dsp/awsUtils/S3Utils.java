@@ -8,17 +8,11 @@ import com.amazonaws.util.Base64;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.stream.Collectors;
-
-/**
- * Created by thinkPAD on 3/29/2016.
- */
 
 public class S3Utils {
     private static AmazonS3Client s3;
@@ -95,12 +89,25 @@ public class S3Utils {
      * @return bool
      */
     public static boolean uploadFile(String bucket, String key, File file) {
-        PutObjectResult result = s3.putObject(new PutObjectRequest(bucket, key, file));
+        try {
+            InputStream stream = new FileInputStream(file);
+            return uploadFile(bucket, key, stream, file.length());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean uploadFile(String bucket, String key, InputStream stream, long contentLength){
+
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(contentLength);
+
+        PutObjectResult result = s3.putObject(new PutObjectRequest(bucket, key, stream, metadata));
         try {
             //FIXME: MD5 digest not outputting the same format as the result.
             MessageDigest md = MessageDigest.getInstance("MD5");
-            try (InputStream is = Files.newInputStream(Paths.get(file.getPath()));
-                 DigestInputStream dis = new DigestInputStream(is, md)) {
+            try (DigestInputStream dis = new DigestInputStream(stream, md)) {
                 byte[] digest = md.digest();
                 String s = new String(Base64.encode(digest));
                 return s.equals(result.getContentMd5());
