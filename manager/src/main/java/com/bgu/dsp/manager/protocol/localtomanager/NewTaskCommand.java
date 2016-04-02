@@ -1,4 +1,4 @@
-package protocol.localtomanager;
+package com.bgu.dsp.manager.protocol.localtomanager;
 
 import com.amazonaws.util.IOUtils;
 import com.bgu.dsp.awsUtils.EC2Utils;
@@ -60,6 +60,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		int workersToStart = numOfWorkers - currentNumOfWorkers;
 		logger.info(currentNumOfWorkers + " workers are running\n" +
 				"Starting " + workersToStart + " more workers for total of " + numOfWorkers + " workers.");
+		// TODO start the workers
 	}
 
 	private int getNumOfWorkers(String fileContent) {

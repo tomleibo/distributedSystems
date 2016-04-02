@@ -4,7 +4,7 @@ import com.bgu.dsp.awsUtils.S3Utils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import protocol.localtomanager.NewTaskCommand;
+import com.bgu.dsp.manager.protocol.localtomanager.NewTaskCommand;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

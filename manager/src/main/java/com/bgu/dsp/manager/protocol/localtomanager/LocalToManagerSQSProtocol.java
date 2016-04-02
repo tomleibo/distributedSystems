@@ -1,6 +1,6 @@
-package protocol.localtomanager;
+package com.bgu.dsp.manager.protocol.localtomanager;
 
-import protocol.MalformedMessageException;
+import com.bgu.dsp.manager.protocol.MalformedMessageException;
 
 /**
  * A protocol for the manager and local application to communicate over the SQS
@@ -31,7 +31,7 @@ public class LocalToManagerSQSProtocol {
 	 * Parses a message that was extracted from the queue and returns an executable command
 	 * @param message the message received from the queue
 	 * @return an executable {@link LocalToManagerCommand} or null if the command is TERMINATE
-	 * @throws MalformedMessageException if the given string doesn't match the protocol
+	 * @throws MalformedMessageException if the given string doesn't match the com.bgu.dsp.manager.protocol
 	 */
 	public static LocalToManagerCommand parse(String message) throws MalformedMessageException {
 		String command = message.substring(message.indexOf("{") + 1, message.indexOf("}"));

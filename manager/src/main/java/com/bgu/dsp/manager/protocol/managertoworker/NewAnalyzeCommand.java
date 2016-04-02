@@ -1,4 +1,4 @@
-package protocol.managertoworker;
+package com.bgu.dsp.manager.protocol.managertoworker;
 
 import java.util.UUID;
 

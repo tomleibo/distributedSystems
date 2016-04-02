@@ -1,9 +1,11 @@
-import protocol.localtomanager.LocalToManagerCommand;
+package com.bgu.dsp.manager;
+
+import com.bgu.dsp.manager.protocol.localtomanager.LocalToManagerCommand;
 import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import org.apache.log4j.Logger;
-import protocol.MalformedMessageException;
-import protocol.localtomanager.LocalToManagerSQSProtocol;
+import com.bgu.dsp.manager.protocol.MalformedMessageException;
+import com.bgu.dsp.manager.protocol.localtomanager.LocalToManagerSQSProtocol;
 
 /**
  * Handles all manager interaction with AWS SQS
