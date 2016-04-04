@@ -11,11 +11,6 @@ import java.util.stream.Collectors;
 
 public class EC2Utils {
 
-    private static final String WORKER_IMAGE_ID = "ami-b66ed3de";
-    public static final String WORKERS_SECURITY_GROUP = "workers_security_group";
-    private static final String MANAGER_INSTANCE_NAME = "manager";
-    private static final String MANAGER_SECURITY_GROUP = "manager_security_group";
-
     private static int
             STATE_CODE_PENDING = 0,
             STATE_CODE_RUNNING = 16,
@@ -94,10 +89,10 @@ public class EC2Utils {
     private static List<String> startWorkers(int n){
         // TODO create a workers security group in AWS
         RunInstancesRequest request = new RunInstancesRequest().
-                withImageId(WORKER_IMAGE_ID).
+                withImageId(Utils.WORKER_IMAGE_ID).
                 withMinCount(n).
                 withMaxCount(n).
-                withSecurityGroups(WORKERS_SECURITY_GROUP).
+                withSecurityGroups(Utils.WORKERS_SECURITY_GROUP).
                 withInstanceType(InstanceType.T2Micro);
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
@@ -162,7 +157,7 @@ public class EC2Utils {
         filters.add(stateFilter);
 
         ArrayList<String> nameFilterValues = new ArrayList<>();
-        nameFilterValues.add("manager");
+        nameFilterValues.add(Utils.MANAGER_INSTANCE_NAME);
         Filter nameFilter = new Filter("tag:Name", nameFilterValues);
         filters.add(nameFilter);
 
@@ -181,10 +176,10 @@ public class EC2Utils {
      */
     public static String startManager() {
         RunInstancesRequest request = new RunInstancesRequest().
-                withImageId(WORKER_IMAGE_ID).
+                withImageId(Utils.WORKER_IMAGE_ID).
                 withMinCount(1).
                 withMaxCount(1).
-                withSecurityGroups(MANAGER_SECURITY_GROUP).
+                withSecurityGroups(Utils.MANAGER_SECURITY_GROUP).
                 withInstanceType(InstanceType.T2Micro);
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 

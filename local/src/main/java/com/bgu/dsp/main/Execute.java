@@ -33,6 +33,7 @@ public class Execute {
     private static String outputFileName;
     private static float filesToWorkersRatio;
     private static boolean terminate = false;
+    private static String inQueueName;
 
 
     public static void main(String args[]) {
@@ -42,8 +43,7 @@ public class Execute {
         if (!isManagerNodeActive()) {
             startManager();
         }
-        String queueUrl ="";
-        createSqsLooper(queueUrl);
+        createSqsLooper(inQueueName);
     }
 
     public static void parseArgs(String[] args) {
@@ -73,8 +73,8 @@ public class Execute {
         catch(QueueNameExistsException e) {
             queueUrl=SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
         }
-        String queueName = UUID.randomUUID().toString();
-        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(queueName, BUCKET_NAME,INPUT_FILE_KEY);
+        inQueueName = UUID.randomUUID().toString();
+        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(inQueueName, BUCKET_NAME,INPUT_FILE_KEY,terminate);
         boolean messageSent = SQSUtils.sendMessage(queueUrl,messageBody);
         if (!messageSent) {
             sqsMessageNotSent(queueUrl,messageBody);
@@ -108,12 +108,16 @@ public class Execute {
         looper.start();
     }
 
-    private static void startManager() {
-        String id = EC2Utils.startManager();
+    /**
+     *
+     * @return instance id
+     */
+    private static String startManager() {
+        return EC2Utils.startManager();
     }
 
 
-    private static boolean isManagerNodeActive() {
+    public static boolean isManagerNodeActive() {
         Instance ins  = EC2Utils.getManagerInstance();
         if (ins==null) {
             return false;

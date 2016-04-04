@@ -1,9 +1,11 @@
 package com.bgu.dsp.main;
 
 import com.bgu.dsp.awsUtils.SQSUtils;
+import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
+import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 
 /**
- * Created by thinkPAD on 4/2/2016.
+ TODO pass number of tweets.
  */
 public class SqsLooper implements Runnable {
     private static final int SLEEP_CYCLE = 10;
@@ -15,7 +17,6 @@ public class SqsLooper implements Runnable {
     public SqsLooper(boolean terminateWhenFinished, String queueUrl) {
         this.terminateWhenFinished = terminateWhenFinished;
         this.queueUrl=queueUrl;
-
     }
 
     // this should create another thread which will check the SQS
@@ -23,12 +24,25 @@ public class SqsLooper implements Runnable {
     // download the response and create an HTML file from it.
     //
 
-
+    //format of sqs msg?
+    //file format?
 
     private static void terminateManager() {
 
     }
 
+    /**
+
+     *
+     *
+     * add heartbit thread.
+     */
+
+
+    private void terminate() {
+        String messageBody = LocalToManagerSQSProtocol.newTerminateMessage();
+
+    }
 
     @Override
     public void run() {
