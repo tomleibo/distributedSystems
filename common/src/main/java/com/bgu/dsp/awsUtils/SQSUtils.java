@@ -68,6 +68,11 @@ public class SQSUtils {
         return sqs.createQueue(createQueueRequest).getQueueUrl();
     }
 
+    public static String getQueueUrlByName(String name) {
+        return sqs.getQueueUrl(name).getQueueUrl();
+    }
+
+
     public static void init() {
         AWSCredentials credentials = Utils.getAwsCredentials();
         sqs = new AmazonSQSClient(credentials);

@@ -1,7 +1,12 @@
 package com.bgu.dsp.main;
 
+import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.sqs.model.QueueNameExistsException;
+import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
+import com.bgu.dsp.awsUtils.SQSUtils;
+import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 
 import java.io.File;
 
@@ -21,7 +26,7 @@ public class Execute {
     private static final String BUCKET_NAME = "bucket";
     private static final String INPUT_FILE_KEY = "inputFile";
     private static final String OUTPUT_FILE_KEY = "outputFile";
-
+    private static final String LOCAL_TO_MANAGER_QUEUE_NAME = "localToManager";
 
     private static String inputFileName;
     private static String outputFileName;
@@ -30,15 +35,13 @@ public class Execute {
 
 
     public static void main(String args[]) {
-        //???
-        String queueUrl ="";
-
         parseArgs(args);
         uploadInputFile(inputFileName);
         sendFileLocationToSqs();
-        if (!manageNodeIsActive()) {
+        if (!isManagerNodeActive()) {
             startManager();
         }
+        String queueUrl ="";
         createSqsLooper(queueUrl);
     }
 
@@ -62,7 +65,18 @@ public class Execute {
     }
 
     private static void sendFileLocationToSqs() {
-
+        String queueUrl;
+        try {
+            queueUrl = SQSUtils.createQueue(LOCAL_TO_MANAGER_QUEUE_NAME);
+        }
+        catch(QueueNameExistsException e) {
+            queueUrl=SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
+        }
+        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(BUCKET_NAME,INPUT_FILE_KEY);
+        boolean messageSent = SQSUtils.sendMessage(queueUrl,messageBody);
+        if (!messageSent) {
+            sqsMessageNotSent(queueUrl,messageBody);
+        }
     }
 
     private static Bucket getOrCreateBucketByName(String bucketName) {
@@ -92,18 +106,24 @@ public class Execute {
         looper.start();
     }
 
-
     private static void startManager() {
-
-    }
-
-    private static boolean manageNodeIsActive() {
-        return false;
+        String id = EC2Utils.startManager();
     }
 
 
-    ////// error handling //////
+    private static boolean isManagerNodeActive() {
+        Instance ins  = EC2Utils.getManagerInstance();
+        if (ins==null) {
+            return false;
+        }
+        return true;
+    }
+
     private static void fileUploadFailed(Bucket bucket, File inFile, String inputFileKey) {
+        throw new RuntimeException("Tweet-File upload failed");
+    }
 
+    private static void sqsMessageNotSent(String queueUrl, String messageBody) {
+        throw new RuntimeException("Sqs message sending failed. url: "+queueUrl+" body:\n"+messageBody);
     }
 }
