@@ -39,7 +39,8 @@ public class NewTaskCommandTest {
 
 	@Test
 	public void execute() throws Exception {
-		NewTaskCommand c = new NewTaskCommand(bucketName, key);
+		NewTaskCommand c = new NewTaskCommand("" // TODO
+				, bucketName, key);
 		c.run();
 	}
 }

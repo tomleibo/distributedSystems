@@ -9,6 +9,7 @@ import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 
 import java.io.File;
+import java.util.UUID;
 
 /**
  * Created by thinkPAD on 4/2/2016.
@@ -72,7 +73,8 @@ public class Execute {
         catch(QueueNameExistsException e) {
             queueUrl=SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
         }
-        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(BUCKET_NAME,INPUT_FILE_KEY);
+        String queueName = UUID.randomUUID().toString();
+        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(queueName, BUCKET_NAME,INPUT_FILE_KEY);
         boolean messageSent = SQSUtils.sendMessage(queueUrl,messageBody);
         if (!messageSent) {
             sqsMessageNotSent(queueUrl,messageBody);

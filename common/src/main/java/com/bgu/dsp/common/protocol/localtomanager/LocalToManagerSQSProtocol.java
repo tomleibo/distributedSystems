@@ -14,9 +14,13 @@ public class LocalToManagerSQSProtocol {
 	/**
 	 * Create a message that represents a new task
 	 * @return a message to send
+	 * @param bucketName The bucket to which the local saved the tweets file
+	 * @param key The key underwhich the local saved the tweets file.
+	 * @param SqsName A queue that was created by the local, to which the manager
+	 *                will send the reply (seperate queue for each local)
 	 */
-	public static String newTaskMessage(String bucketName, String key){
-		return "{" + NEW_TASK + "}[" + bucketName + "," + key + "]";
+	public static String newTaskMessage(String SqsName, String bucketName, String key){
+		return "{" + NEW_TASK + "}[" + SqsName + "," + bucketName + "," + key + "]";
 	}
 
 	/**
@@ -51,13 +55,14 @@ public class LocalToManagerSQSProtocol {
 		String[] argsArr = args.split(",");
 
 		// expect bucketName and key arguments
-		if (argsArr.length != 2){
+		if (argsArr.length != 3){
 			throw new MalformedMessageException(message);
 		}
 
-		String bucketName = argsArr[0];
-		String key = argsArr[1];
+		String sqsName = argsArr[0];
+		String bucketName = argsArr[1];
+		String key = argsArr[2];
 
-		return new NewTaskCommand(bucketName, key);
+		return new NewTaskCommand(sqsName, bucketName, key);
 	}
 }

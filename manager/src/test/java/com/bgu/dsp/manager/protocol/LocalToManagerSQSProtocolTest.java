@@ -15,7 +15,8 @@ public class LocalToManagerSQSProtocolTest {
 
 		String bucketName = "mybucket";
 		String key = "mykey";
-		String message = LocalToManagerSQSProtocol.newTaskMessage(bucketName, key);
+		String message = LocalToManagerSQSProtocol.newTaskMessage("" // TODO
+				,bucketName, key);
 		Assert.assertEquals("{" + "NEW_TASK" + "}" + "[" + bucketName + "," + key + "]", message);
 	}
 

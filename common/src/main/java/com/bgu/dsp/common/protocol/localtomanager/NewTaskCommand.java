@@ -20,11 +20,13 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	private static final String WORKERS_QUEUE_RUL = "";
 	public static final String MANAGER_WORKERS_QUEUE_NAME = "manager-workers-queue";
 	private final double linesPerWorker = 100.0;//TODO
+	private final String sqsName;
 	private final String bucketName;
 	private final String key;
 	private static int queueCounter = 0;
 
-	public NewTaskCommand(String bucketName, String key){
+	public NewTaskCommand(String sqsName, String bucketName, String key){
+		this.sqsName = sqsName;
 		this.bucketName = bucketName;
 		this.key = key;
 	}
