@@ -19,8 +19,9 @@ public class LocalToManagerSQSProtocol {
 	 * @param SqsName A queue that was created by the local, to which the manager
 	 *                will send the reply (seperate queue for each local)
 	 */
-	public static String newTaskMessage(String SqsName, String bucketName, String key){
-		return "{" + NEW_TASK + "}[" + SqsName + "," + bucketName + "," + key + "]";
+	public static String newTaskMessage(String SqsName, String bucketName, String key, boolean terminate){
+		return "{" + NEW_TASK + "}[" + SqsName + "," + bucketName + "," + key +
+				"," + terminate + "]";
 	}
 
 	/**
@@ -55,13 +56,14 @@ public class LocalToManagerSQSProtocol {
 		String[] argsArr = args.split(",");
 
 		// expect bucketName and key arguments
-		if (argsArr.length != 3){
+		if (argsArr.length != 4){
 			throw new MalformedMessageException(message);
 		}
 
 		String sqsName = argsArr[0];
 		String bucketName = argsArr[1];
 		String key = argsArr[2];
+		boolean terminate = Boolean.valueOf(argsArr[3]);
 
 		return new NewTaskCommand(sqsName, bucketName, key);
 	}
