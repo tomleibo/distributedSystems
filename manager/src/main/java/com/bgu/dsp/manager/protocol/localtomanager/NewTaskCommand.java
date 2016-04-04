@@ -4,8 +4,8 @@ import com.amazonaws.util.IOUtils;
 import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
+import com.bgu.dsp.manager.protocol.managertoworker.ManagerToWorkersSQSProtocol;
 import org.apache.log4j.Logger;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,9 +13,6 @@ import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by hagai_lvi on 30/03/2016.
- */
 public class NewTaskCommand implements LocalToManagerCommand {
 
 	final static Logger logger = Logger.getLogger(NewTaskCommand.class);
@@ -24,18 +21,25 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	private final double linesPerWorker = 100.0;//TODO
 	private final String bucketName;
 	private final String key;
+	private static int queueCounter = 0;
 
 	public NewTaskCommand(String bucketName, String key){
 		this.bucketName = bucketName;
 		this.key = key;
 	}
-	public void execute() {
+
+	@Override
+	public void run() {
 		String fileContent = getFileContent();
 		startWorkers(fileContent);
 		postTweetsToQueue(fileContent);
 	}
 
 	private void postTweetsToQueue(String fileContent) {
+
+		// Create a new queue that will serve the manger and workers solely for this specifik task
+		String queueName = getNewQueueName();
+		createQueue(queueName);
 
 		// TODO what happens if the queue already exist?!
 		String queueUrl = SQSUtils.createQueue(MANAGER_WORKERS_QUEUE_NAME);
@@ -46,12 +50,23 @@ public class NewTaskCommand implements LocalToManagerCommand {
 
 		try {
 			while( (line = bufReader.readLine()) != null ) {
-				SQSUtils.sendMessage(queueUrl, line);
+				String msg = ManagerToWorkersSQSProtocol.newAnalyzeMessage(line, queueName);
+
+				SQSUtils.sendMessage(queueUrl, msg);
 			}
 		} catch (IOException e) {
 			logger.warn(e);
 		}
 
+	}
+
+	private void createQueue(String queueName) {
+		SQSUtils.createQueue(queueName);
+	}
+
+	private synchronized String getNewQueueName() {
+		int id = this.queueCounter++;
+		return "queue_" + id;
 	}
 
 	private void startWorkers(String fileContent) {

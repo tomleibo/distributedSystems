@@ -4,9 +4,6 @@ import com.bgu.dsp.manager.protocol.MalformedMessageException;
 
 import java.util.UUID;
 
-/**
- * Created by hagai_lvi on 01/04/2016.
- */
 public class ManagerToWorkersSQSProtocol {
 
 	public static final String ANALYZE = "ANALYZE";
@@ -16,10 +13,10 @@ public class ManagerToWorkersSQSProtocol {
 	 * Create a message that represents a new analyze task
 	 * @return a message to send
 	 */
-	public static String newAnalyzeMessage(String url){
+	public static String newAnalyzeMessage(String tweetUrl, String sqsQueueName){
 
 		UUID uuid = UUID.randomUUID();
-		return "{" + ANALYZE + "}[" + uuid+ "," + url+ "]";
+		return "{" + ANALYZE + "}[" + uuid + "," + sqsQueueName + "," + tweetUrl+ "]";
 	}
 
 
@@ -40,9 +37,10 @@ public class ManagerToWorkersSQSProtocol {
 	private static ManagerToWorkerCommand parseAnalyzeMessage(String message) throws MalformedMessageException {
 		String args = message.substring(message.indexOf("[") + 1, message.indexOf("]"));
 		String[] argsArr = args.split(",");
-		if (argsArr.length != 2) {
-			throw new MalformedMessageException(ANALYZE + " command requires exactly 2 arguments.\n" +
-					"Original message is " + message);
+		final int EXPECTED_ARGS = 3;
+		if (argsArr.length != EXPECTED_ARGS) {
+			throw new MalformedMessageException(ANALYZE + " command requires exactly " + EXPECTED_ARGS +
+					" arguments.\n" + "Original message is " + message);
 		}
 
 		UUID uuid;
@@ -54,8 +52,10 @@ public class ManagerToWorkersSQSProtocol {
 					"Original message is " + message, e);
 		}
 
-		String tweetLink = argsArr[1];
+		String sqsQueueName = argsArr[1];
 
-		return new NewAnalyzeCommand(uuid, tweetLink);
+		String tweetUrl = argsArr[2];
+
+		return new NewAnalyzeCommand(uuid, sqsQueueName, tweetUrl);
 	}
 }

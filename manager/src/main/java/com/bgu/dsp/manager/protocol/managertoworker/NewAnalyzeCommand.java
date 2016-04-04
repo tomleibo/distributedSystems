@@ -2,30 +2,30 @@ package com.bgu.dsp.manager.protocol.managertoworker;
 
 import java.util.UUID;
 
-/**
- * Created by hagai_lvi on 01/04/2016.
- */
 public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 
-	private UUID uuid;
-	private String link;
+	private final UUID uuid;
+	private final String sqsQueueName;
+	private final String tweetUrl;
 
 	@Override
 	public String toString() {
 		return "NewAnalyzeCommand{" +
 				"uuid=" + uuid +
-				", link='" + link + '\'' +
+				", sqsQueueName='" + sqsQueueName + '\'' +
+				", tweetUrl='" + tweetUrl + '\'' +
 				'}';
 	}
 
-	public NewAnalyzeCommand(UUID uuid, String link) {
+	public NewAnalyzeCommand(UUID uuid, String sqsQueueName, String tweetUrl) {
 		this.uuid = uuid;
-		this.link = link;
+		this.sqsQueueName = sqsQueueName;
+		this.tweetUrl = tweetUrl;
 	}
 
 	@Override
 	public void execute() {
-		// TODO implement buy the workers
+		// TODO implement by the workers
 		System.out.println(toString());
 	}
 }
