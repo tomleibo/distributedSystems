@@ -10,3 +10,8 @@ Todo: S3Tests assert downloaded and uploaded files are identical
 TODO: add md5 check on Sqs.sendMessage
 add mock to EC2
 Ec2 Tests
+
+API coordination:
+ Execute.BUCKET_NAME
+ OUTPUT_FILE_KEY
+ INPUT_FILE_KEY
