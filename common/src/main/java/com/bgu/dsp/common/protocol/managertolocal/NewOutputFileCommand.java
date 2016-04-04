@@ -27,7 +27,7 @@ public class NewOutputFileCommand implements NewLocalCommand {
     public void run() {
         try {
             File file = S3Utils.downloadFile(bucketName,key);
-            List<Tweet> matrix = parseFileIntoMatrix(file);
+            List<Tweet> matrix = parseFileIntoTweetList(file);
             String html = convertToHtml(matrix);
             writeToFile(Utils.OUTPUT_FILENAME,html);
         }
@@ -36,7 +36,7 @@ public class NewOutputFileCommand implements NewLocalCommand {
         }
     }
 
-    private List<Tweet> parseFileIntoMatrix(File file) {
+    private List<Tweet> parseFileIntoTweetList(File file) {
         List<Tweet> result = new ArrayList<>();
         //TODO
         return result;
@@ -50,13 +50,13 @@ public class NewOutputFileCommand implements NewLocalCommand {
                 entityList.append(s);
             }
             Map<Integer,String> colorMap = new HashMap<>();
-            colorMap.put(0,"FF0000");
-            colorMap.put(1,"993300");
-            colorMap.put(2,"7F7F00");
-            colorMap.put(3,"339900");
-            colorMap.put(4,"00FF00");
+            colorMap.put(0,"rgb(255, 223, 186)");
+            colorMap.put(1,"rgb(255, 223, 186)");
+            colorMap.put(2,"rgb(255, 255, 186)");
+            colorMap.put(3,"rgb(186, 255, 201)");
+            colorMap.put(4,"rgb(186, 225, 255)");
             ContainerTag tr = tr().with(td(tweet.tweet), td(entityList.toString()));
-            tr.setAttribute("style", "{background-color:#" + colorMap.get(tweet.sentiment));
+            tr.setAttribute("style", "{background-color:" + colorMap.get(tweet.sentiment));
             rows.add(tr);
         }
 
