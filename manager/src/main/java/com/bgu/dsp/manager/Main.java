@@ -1,8 +1,9 @@
 package com.bgu.dsp.manager;
 
 import com.bgu.dsp.awsUtils.SQSUtils;
-import com.bgu.dsp.manager.protocol.localtomanager.LocalToManagerCommand;
+import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
 import org.apache.log4j.Logger;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;

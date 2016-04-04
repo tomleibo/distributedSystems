@@ -1,6 +1,6 @@
-package com.bgu.dsp.manager.protocol.managertoworker;
+package com.bgu.dsp.common.protocol.managertoworker;
 
-import com.bgu.dsp.manager.protocol.MalformedMessageException;
+import com.bgu.dsp.common.protocol.MalformedMessageException;
 
 import java.util.UUID;
 

@@ -2,7 +2,7 @@ package com.bgu.dsp.manager.protocol;
 
 import org.junit.Assert;
 import org.junit.Test;
-import com.bgu.dsp.manager.protocol.localtomanager.LocalToManagerSQSProtocol;
+import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 
 /**
  * Created by hagai_lvi on 30/03/2016.

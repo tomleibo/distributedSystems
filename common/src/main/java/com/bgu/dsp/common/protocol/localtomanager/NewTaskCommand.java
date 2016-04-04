@@ -1,11 +1,12 @@
-package com.bgu.dsp.manager.protocol.localtomanager;
+package com.bgu.dsp.common.protocol.localtomanager;
 
 import com.amazonaws.util.IOUtils;
 import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
-import com.bgu.dsp.manager.protocol.managertoworker.ManagerToWorkersSQSProtocol;
+import com.bgu.dsp.common.protocol.managertoworker.ManagerToWorkersSQSProtocol;
 import org.apache.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

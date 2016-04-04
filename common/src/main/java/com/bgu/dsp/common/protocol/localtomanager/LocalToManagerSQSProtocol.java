@@ -1,6 +1,6 @@
-package com.bgu.dsp.manager.protocol.localtomanager;
+package com.bgu.dsp.common.protocol.localtomanager;
 
-import com.bgu.dsp.manager.protocol.MalformedMessageException;
+import com.bgu.dsp.common.protocol.MalformedMessageException;
 
 /**
  * A protocol for the manager and local application to communicate over the SQS

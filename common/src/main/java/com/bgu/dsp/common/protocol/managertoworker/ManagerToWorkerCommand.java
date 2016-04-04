@@ -1,4 +1,4 @@
-package com.bgu.dsp.manager.protocol.managertoworker;
+package com.bgu.dsp.common.protocol.managertoworker;
 
 /**
  * Created by hagai_lvi on 01/04/2016.

@@ -1,4 +1,4 @@
-package com.bgu.dsp.manager.protocol;
+package com.bgu.dsp.common.protocol;
 
 /**
  * Created by hagai_lvi on 30/03/2016.
