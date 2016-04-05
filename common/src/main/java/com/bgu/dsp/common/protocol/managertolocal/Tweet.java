@@ -17,5 +17,24 @@ public class Tweet {
         this.entities = entities;
         this.sentiment = sentiment;
     }
+
+    public Tweet() {
+
+    }
+
+    public Tweet setTweet(String tweet) {
+        this.tweet = tweet;
+        return this;
+    }
+
+    public Tweet setEntities(List<String> entities) {
+        this.entities = entities;
+        return this;
+    }
+
+    public Tweet setSentiment(int sentiment) {
+        this.sentiment = sentiment;
+        return this;
+    }
 }
 

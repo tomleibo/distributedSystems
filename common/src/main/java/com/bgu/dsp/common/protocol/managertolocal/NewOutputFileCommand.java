@@ -5,8 +5,8 @@ import com.bgu.dsp.awsUtils.Utils;
 import j2html.tags.ContainerTag;
 import j2html.tags.Tag;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 
 import static j2html.TagCreator.*;
@@ -38,15 +38,44 @@ public class NewOutputFileCommand implements NewLocalCommand {
 
     private List<Tweet> parseFileIntoTweetList(File file) {
         List<Tweet> result = new ArrayList<>();
-        //TODO
+        final int DELIMITER = 0;
+
+        List<String> lines=null;
+        try {
+            lines = Files.readAllLines(file.toPath());
+        }
+        catch (IOException e) {
+            fileReadFailed(file,e);
+        }
+        int cursor = 0;
+        for (String line : lines) {
+            Tweet t = parseOneTweetFromFile(line, cursor);
+            result.add(t);
+        }
+
+
+
+         /* output file format:
+        * per tweet: numberOfEnts \0 tweet \0 (entities) [name:TYPE,...] \0 (sentiment) int(0-4) \0
+                */
         return result;
+    }
+
+    private Tweet parseOneTweetFromFile(String line, int cursor) {
+        Tweet t = new Tweet();
+        String[] substrs = line.split("\0");
+        t.setTweet(substrs[1]).setSentiment(Integer.parseInt(substrs[3])).setEntities(Arrays.asList(substrs[2].split(",")));
+        return t;
     }
 
     private String convertToHtml(List<Tweet> matrix) {
         List<Tag> rows = new ArrayList<>();
         for (Tweet tweet : matrix) {
             StringBuilder entityList = new StringBuilder();
+            String prefix="";
             for (String s : tweet.entities) {
+                entityList.append(prefix);
+                prefix=", ";
                 entityList.append(s);
             }
             Map<Integer,String> colorMap = new HashMap<>();
@@ -70,20 +99,40 @@ public class NewOutputFileCommand implements NewLocalCommand {
                         table().with(rows)
                 )
         ).render();
-
-        /* output file format:
-        * per tweet: numberOfEnts \0 tweet \0 (entities) [name:TYPE,...] \0 (sentiment) int(0-4) \0
-                */
         return html;
     }
 
-
-
     private void writeToFile(String outputFilename, String html) {
-
+        File file = new File(outputFilename);
+        if (!file.exists()) {
+            file.mkdirs();
+            try {
+                file.createNewFile();
+            }
+            catch (IOException e) {
+                outputFileNotCreated(file,e);
+            }
+        }
+        try (PrintWriter writer = new PrintWriter(outputFilename, "UTF-8")) {
+            writer.println(html);
+            writer.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void downloadFailed(IOException e) {
+    private void outputFileNotCreated(File file, IOException e) {
+        //TODO
+    }
 
+
+    private void downloadFailed(IOException e) {
+        //TODO
+    }
+
+    private void fileReadFailed(File file, IOException e) {
+        //TODO
     }
 }
