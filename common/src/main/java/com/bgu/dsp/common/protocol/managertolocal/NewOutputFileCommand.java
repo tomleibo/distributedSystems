@@ -47,9 +47,8 @@ public class NewOutputFileCommand implements NewLocalCommand {
         catch (IOException e) {
             fileReadFailed(file,e);
         }
-        int cursor = 0;
         for (String line : lines) {
-            Tweet t = parseOneTweetFromFile(line, cursor);
+            Tweet t = parseOneTweet(line);
             result.add(t);
         }
 
@@ -61,10 +60,13 @@ public class NewOutputFileCommand implements NewLocalCommand {
         return result;
     }
 
-    private Tweet parseOneTweetFromFile(String line, int cursor) {
+    private Tweet parseOneTweet(String line) {
         Tweet t = new Tweet();
         String[] substrs = line.split("\0");
-        t.setTweet(substrs[1]).setSentiment(Integer.parseInt(substrs[3])).setEntities(Arrays.asList(substrs[2].split(",")));
+        String ents = substrs[2].substring(2,substrs[2].length()-1);
+        t.setTweet(substrs[1].substring(1));
+        t.setSentiment(Integer.parseInt(substrs[3].substring(1)));
+        t.setEntities(Arrays.asList(ents.split(",")));
         return t;
     }
 

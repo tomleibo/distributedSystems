@@ -36,5 +36,35 @@ public class Tweet {
         this.sentiment = sentiment;
         return this;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Tweet tweet1 = (Tweet) o;
+
+        if (sentiment != tweet1.sentiment) return false;
+        if (!tweet.equals(tweet1.tweet)) return false;
+        return entities.equals(tweet1.entities);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = tweet.hashCode();
+        result = 31 * result + entities.hashCode();
+        result = 31 * result + sentiment;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Tweet{" +
+                "tweet='" + tweet + '\'' +
+                ", entities=" + entities +
+                ", sentiment=" + sentiment +
+                '}';
+    }
 }
 

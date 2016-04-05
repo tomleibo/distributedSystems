@@ -1,17 +1,14 @@
-import com.amazonaws.auth.policy.resources.S3BucketResource;
 import com.amazonaws.services.s3.model.Bucket;
 import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
 import java.io.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.bgu.dsp.awsUtils.S3Utils.createBucket;
-import static com.bgu.dsp.awsUtils.S3Utils.getBuckets;
 import static com.bgu.dsp.awsUtils.S3Utils.*;
+
 
 /**
  * Created by thinkPAD on 3/29/2016.

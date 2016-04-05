@@ -1,14 +1,15 @@
-import org.junit.Test;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.sqs.model.Message;
-import static com.bgu.dsp.awsUtils.SQSUtils.*;
+import org.junit.Test;
+
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static com.bgu.dsp.awsUtils.SQSUtils.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by thinkPAD on 3/29/2016.
