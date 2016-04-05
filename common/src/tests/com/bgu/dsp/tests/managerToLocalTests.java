@@ -22,7 +22,6 @@ public class managerToLocalTests {
     @Test
     public void testParseFileIntoTweetList() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
         NewOutputFileCommand cmd = new NewOutputFileCommand("bucketName","keyName");
-
         Method method = cmd.getClass().getDeclaredMethod("parseFileIntoTweetList", File.class);
         method.setAccessible(true);
         List<Tweet> tweets = (List<Tweet>) method.invoke(cmd, getSampleTweetFile());
@@ -32,8 +31,8 @@ public class managerToLocalTests {
 
     private List<Tweet> sampleTweetList() {
         List<Tweet> tweets = new ArrayList<>();
-        tweets.add(new Tweet("tweet tweet Tom Bash", Arrays.asList(new String[] {"Tom:NAME","Bash:Location"}),3));
-        tweets.add(new Tweet("3489034niu'\"$%#&$&^&%$@5wef948r4934b34f8h", Arrays.asList(new String[] {}),2));
+        tweets.add(new Tweet("tweet tweet Tom Bash", Arrays.asList(new String[]{"Tom:NAME", "Bash:Location"}), 3));
+        tweets.add(new Tweet("3489034niu'\"$%#&$&^&%$@5wef948r4934b34f8h", Arrays.asList(new String[]{}), 2));
         return tweets;
     }
 
@@ -47,5 +46,15 @@ public class managerToLocalTests {
         //* per tweet: numberOfEnts \0 tweet \0 (entities) [name:TYPE,...] \0 (sentiment) int(0-4) \0
         Files.write(Paths.get(temp.getPath()), data.getBytes(), StandardOpenOption.CREATE);
         return temp;
+    }
+
+    @Test
+    public void testConvertToHtml() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        NewOutputFileCommand cmd = new NewOutputFileCommand("bucketName","keyName");
+        Method method = cmd.getClass().getDeclaredMethod("convertToHtml",List.class);
+        method.setAccessible(true);
+        String html = (String) method.invoke(cmd, sampleTweetList());
+        String expected = "<html><head><title>Distributed Systems Assignment 1</title><link rel=\"stylesheet\" href=\"./css.css\"></head><body><table><tr class=\"color3\"><td>tweet tweet Tom Bash</td><td>Tom:NAME, Bash:Location</td></tr><tr class=\"color2\"><td>3489034niu'&quot;$%#&amp;$&amp;^&amp;%$@5wef948r4934b34f8h</td><td></td></tr></table></body></html>";
+        assertEquals(expected,html);
     }
 }

@@ -11,9 +11,7 @@ import java.util.*;
 
 import static j2html.TagCreator.*;
 
-/**
- * Created by thinkPAD on 4/4/2016.
- */
+
 public class NewOutputFileCommand implements NewLocalCommand {
     String bucketName;
     String key;
@@ -27,8 +25,8 @@ public class NewOutputFileCommand implements NewLocalCommand {
     public void run() {
         try {
             File file = S3Utils.downloadFile(bucketName,key);
-            List<Tweet> matrix = parseFileIntoTweetList(file);
-            String html = convertToHtml(matrix);
+            List<Tweet> tweetList = parseFileIntoTweetList(file);
+            String html = convertToHtml(tweetList);
             writeToFile(Utils.OUTPUT_FILENAME,html);
         }
         catch (IOException e) {
@@ -51,12 +49,6 @@ public class NewOutputFileCommand implements NewLocalCommand {
             Tweet t = parseOneTweet(line);
             result.add(t);
         }
-
-
-
-         /* output file format:
-        * per tweet: numberOfEnts \0 tweet \0 (entities) [name:TYPE,...] \0 (sentiment) int(0-4) \0
-                */
         return result;
     }
 
@@ -81,13 +73,13 @@ public class NewOutputFileCommand implements NewLocalCommand {
                 entityList.append(s);
             }
             Map<Integer,String> colorMap = new HashMap<>();
-            colorMap.put(0,"rgb(255, 223, 186)");
-            colorMap.put(1,"rgb(255, 223, 186)");
-            colorMap.put(2,"rgb(255, 255, 186)");
-            colorMap.put(3,"rgb(186, 255, 201)");
-            colorMap.put(4,"rgb(186, 225, 255)");
+            colorMap.put(0,"color0");
+            colorMap.put(1,"color1");
+            colorMap.put(2,"color2");
+            colorMap.put(3,"color3");
+            colorMap.put(4,"color4");
             ContainerTag tr = tr().with(td(tweet.tweet), td(entityList.toString()));
-            tr.setAttribute("style", "{background-color:" + colorMap.get(tweet.sentiment));
+            tr.setAttribute("class",colorMap.get(tweet.sentiment));
             rows.add(tr);
         }
 
