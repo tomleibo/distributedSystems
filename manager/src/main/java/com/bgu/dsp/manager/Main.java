@@ -1,37 +1,46 @@
 package com.bgu.dsp.manager;
 
 import com.bgu.dsp.awsUtils.SQSUtils;
+import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
 import org.apache.log4j.Logger;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static com.bgu.dsp.awsUtils.Utils.LOCAL_TO_MANAGER_QUEUE_NAME;
+import static com.bgu.dsp.awsUtils.Utils.MANAGER_TO_WORKERS_QUEUE_NAME;
+
 public class Main {
 	final static Logger logger = Logger.getLogger(Main.class);
 
-	private static final String QUEUE_NAME = "local-to-manager-queue";
 	public static final int EXECUTOR_TIMEOUT = 60;
 
 	public static void main(String[] args) {
 
-		String queueUrl = SQSUtils.createQueue(QUEUE_NAME);
+		// This queue should be already created by the local
+		String localToManagerQueueUrl = SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
+
+		String managerToWorkersQueueUrl = SQSUtils.createQueue(MANAGER_TO_WORKERS_QUEUE_NAME);
 
 		ExecutorService executor = Executors.newCachedThreadPool();
 
 		SQSHandler sqsHandler = new SQSHandler();
 		while (true){
-			LocalToManagerCommand commandFromQueue = sqsHandler.getCommandFromQueue(queueUrl);
-			if (commandFromQueue != null) {
-				executor.execute(commandFromQueue);
-			}else{
-				// commandFromQueue != null means that we got a terminate request
-				break;
+			try {
+				LocalToManagerCommand commandFromQueue = sqsHandler.getCommandFromQueue(localToManagerQueueUrl);
+				if (commandFromQueue != null) {
+					executor.execute(commandFromQueue);
+					if (commandFromQueue.shouldTerminate()) {
+						break;
+					}
+				}
+			} catch (MalformedMessageException e){
+				logger.error(e);
 			}
 		}
 
-		logger.info("Shuting down executor, waiting for all tasks to be completed");
+		logger.info("Shutting down executor, waiting for all tasks to be completed");
 		executor.shutdown();
 
 		boolean keepWaiting = true;
@@ -41,6 +50,10 @@ public class Main {
 			} catch (InterruptedException e) {}
 			logger.info("Executor didn't finish, waiting " + EXECUTOR_TIMEOUT + " seconds for it to finish");
 		}
+
+		logger.debug("Deleting " + MANAGER_TO_WORKERS_QUEUE_NAME + " queue");
+		SQSUtils.deleteQueue(managerToWorkersQueueUrl);
+
 		logger.info("All tasks completed, shutting down");
 
 	}

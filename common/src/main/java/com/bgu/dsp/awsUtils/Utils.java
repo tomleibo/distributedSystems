@@ -17,6 +17,16 @@ public class Utils {
     public static final String OUTPUT_FILENAME = "output.html";
     public static Region region = Region.getRegion(Regions.US_EAST_1);
 
+	/**
+	 * Queue in which the manager passes tasks to the workers
+     */
+    public static final String MANAGER_TO_WORKERS_QUEUE_NAME = "manager-to-workers-queue";
+
+	/**
+     * Queue in which the local passes tasks to the manager
+     */
+    public static final String LOCAL_TO_MANAGER_QUEUE_NAME = "local-to-manager-queue";
+
     public static AWSCredentials getAwsCredentials() {
         AWSCredentials credentials = null;
         try {

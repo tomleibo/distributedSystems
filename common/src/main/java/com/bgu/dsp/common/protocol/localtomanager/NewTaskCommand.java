@@ -14,21 +14,24 @@ import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.bgu.dsp.awsUtils.Utils.MANAGER_TO_WORKERS_QUEUE_NAME;
+
 public class NewTaskCommand implements LocalToManagerCommand {
 
 	final static Logger logger = Logger.getLogger(NewTaskCommand.class);
 	private static final String WORKERS_QUEUE_RUL = "";
-	public static final String MANAGER_WORKERS_QUEUE_NAME = "manager-workers-queue";
 	private final double linesPerWorker = 100.0;//TODO
 	private final String sqsName;
 	private final String bucketName;
 	private final String key;
 	private static int queueCounter = 0;
+	private final boolean terminate;
 
-	public NewTaskCommand(String sqsName, String bucketName, String key){
+	public NewTaskCommand(String sqsName, String bucketName, String key, boolean terminate){
 		this.sqsName = sqsName;
 		this.bucketName = bucketName;
 		this.key = key;
+		this.terminate = terminate;
 	}
 
 	@Override
@@ -36,6 +39,14 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		String fileContent = getFileContent();
 		startWorkers(fileContent);
 		postTweetsToQueue(fileContent);
+		waitForAllReplies();
+	}
+
+	/**
+	 * Wait for all the tasks sent to the workers to be completed
+	 */
+	private void waitForAllReplies() {
+
 	}
 
 	private void postTweetsToQueue(String fileContent) {
@@ -44,8 +55,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		String queueName = getNewQueueName();
 		createQueue(queueName);
 
-		// TODO what happens if the queue already exist?!
-		String queueUrl = SQSUtils.createQueue(MANAGER_WORKERS_QUEUE_NAME);
+		String queueUrl = SQSUtils.getQueueUrlByName(MANAGER_TO_WORKERS_QUEUE_NAME);
 
 		BufferedReader bufReader = new BufferedReader(new StringReader(fileContent));
 
@@ -113,5 +123,10 @@ public class NewTaskCommand implements LocalToManagerCommand {
 			lines ++;
 		}
 		return lines;
+	}
+
+	@Override
+	public boolean shouldTerminate() {
+		return this.terminate;
 	}
 }

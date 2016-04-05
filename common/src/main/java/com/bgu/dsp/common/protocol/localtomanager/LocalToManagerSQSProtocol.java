@@ -65,6 +65,6 @@ public class LocalToManagerSQSProtocol {
 		String key = argsArr[2];
 		boolean terminate = Boolean.valueOf(argsArr[3]);
 
-		return new NewTaskCommand(sqsName, bucketName, key);
+		return new NewTaskCommand(sqsName, bucketName, key, terminate);
 	}
 }
