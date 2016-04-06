@@ -13,10 +13,9 @@ public class ManagerToWorkersSQSProtocol {
 	 * Create a message that represents a new analyze task
 	 * @return a message to send
 	 */
-	public static String newAnalyzeMessage(String tweetUrl, String sqsQueueName){
+	public static String newAnalyzeMessage(String tweetUrl, String sqsQueueName, UUID uuid){
 
-		UUID uuid = UUID.randomUUID();
-		return "{" + ANALYZE + "}[" + uuid + "," + sqsQueueName + "," + tweetUrl+ "]";
+		return "{" + ANALYZE + "}[" + uuid.toString() + "," + sqsQueueName + "," + tweetUrl+ "]";
 	}
 
 

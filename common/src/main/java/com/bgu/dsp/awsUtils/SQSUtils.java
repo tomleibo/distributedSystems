@@ -37,9 +37,13 @@ public class SQSUtils {
 	/**
 	 * Return a single message if exists in the queue, otherwise return null
      */
-    public static Message getMessage(String queueUrl){
+    public static Message getMessage(String queueUrl) {
+        return getMessage(queueUrl, 0);
+    }
+    public static Message getMessage(String queueUrl, int timeoutSeconds){
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl)
-                .withMaxNumberOfMessages(1);
+                .withMaxNumberOfMessages(1)
+                .withWaitTimeSeconds(timeoutSeconds);
 
         List<Message> messages = sqs.receiveMessage(queueUrl).getMessages();
 

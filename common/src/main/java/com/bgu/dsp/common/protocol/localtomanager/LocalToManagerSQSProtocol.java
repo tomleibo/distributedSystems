@@ -16,11 +16,12 @@ public class LocalToManagerSQSProtocol {
 	 * @return a message to send
 	 * @param bucketName The bucket to which the local saved the tweets file
 	 * @param key The key underwhich the local saved the tweets file.
-	 * @param SqsName A queue that was created by the local, to which the manager
-	 *                will send the reply (seperate queue for each local)
+	 * @param sqsName A queue that was created by the local, to which the manager
+	 *                will send the reply (separate queue for each local)
+	 * @param terminate if true, the manager will not accept any more tasks after this one, and will terminate
 	 */
-	public static String newTaskMessage(String SqsName, String bucketName, String key, boolean terminate){
-		return "{" + NEW_TASK + "}[" + SqsName + "," + bucketName + "," + key +
+	public static String newTaskMessage(String sqsName, String bucketName, String key, boolean terminate){
+		return "{" + NEW_TASK + "}[" + sqsName + "," + bucketName + "," + key +
 				"," + terminate + "]";
 	}
 
