@@ -10,6 +10,8 @@ import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 
 import java.io.File;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by thinkPAD on 4/2/2016.
@@ -34,16 +36,25 @@ public class Execute {
     private static float filesToWorkersRatio;
     private static boolean terminate = false;
     private static String inQueueName;
-
+    private static ExecutorService executor = Executors.newFixedThreadPool(4);
+    private static String queueUrl;
 
     public static void main(String args[]) {
         parseArgs(args);
         uploadInputFile(inputFileName);
-        sendFileLocationToSqs();
+        getQueueUrlOrCreateIfNotExists();
+        sendMessageToManager();
         if (!isManagerNodeActive()) {
             startManager();
         }
+        startHeartBit();
         createSqsLooper(inQueueName);
+    }
+
+    private static void startHeartBit() {
+        executor.execute(new HeartBit() {
+
+        });
     }
 
     public static void parseArgs(String[] args) {
@@ -65,17 +76,20 @@ public class Execute {
         }
     }
 
-    private static void sendFileLocationToSqs() {
-        String queueUrl;
+    private static void getQueueUrlOrCreateIfNotExists() {
         try {
             queueUrl = SQSUtils.createQueue(LOCAL_TO_MANAGER_QUEUE_NAME);
         }
         catch(QueueNameExistsException e) {
-            queueUrl=SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
+            queueUrl =SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
         }
         inQueueName = UUID.randomUUID().toString();
-        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(inQueueName, BUCKET_NAME,INPUT_FILE_KEY,terminate);
-        boolean messageSent = SQSUtils.sendMessage(queueUrl,messageBody);
+
+    }
+
+    private static void sendMessageToManager() {
+        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(inQueueName, BUCKET_NAME, INPUT_FILE_KEY, terminate);
+        boolean messageSent = SQSUtils.sendMessage(queueUrl, messageBody);
         if (!messageSent) {
             sqsMessageNotSent(queueUrl,messageBody);
         }
@@ -104,8 +118,8 @@ public class Execute {
     }
 
     private static void createSqsLooper(String queueUrl) {
-        SqsLooper looper = new SqsLooper(terminate,queueUrl);
-        looper.start();
+        SqsLooper looper =new SqsLooper(terminate,queueUrl,executor);
+        executor.execute(looper);
     }
 
     /**
@@ -131,5 +145,16 @@ public class Execute {
 
     private static void sqsMessageNotSent(String queueUrl, String messageBody) {
         throw new RuntimeException("Sqs message sending failed. url: "+queueUrl+" body:\n"+messageBody);
+    }
+
+    private static class HeartBit implements Runnable {
+        @Override
+        public void run() {
+            if (!isManagerNodeActive()) {
+                startManager();
+                //TODO is this necessary?
+                sendMessageToManager();
+            }
+        }
     }
 }
