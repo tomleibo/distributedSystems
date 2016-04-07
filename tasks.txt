@@ -1,17 +1,3 @@
-dsp assign 1:
-1. research on local mock ups for SQS,EC2,S3 - hagai
-2. Hands on AWS-SDK - Tom
-3. local impl - Tom
-4. Manager
-
-
-Fixme: S3utils.uploadFile method. MD5 doesn't match.
 Todo: S3Tests assert downloaded and uploaded files are identical
 TODO: add md5 check on Sqs.sendMessage
-add mock to EC2
-Ec2 Tests
 
-API coordination:
- Execute.BUCKET_NAME
- OUTPUT_FILE_KEY
- INPUT_FILE_KEY

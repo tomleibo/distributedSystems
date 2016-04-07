@@ -14,7 +14,6 @@ public class Utils {
     public static final String WORKERS_SECURITY_GROUP = "workers_security_group";
     public static final String MANAGER_INSTANCE_NAME = "manager";
     public static final String MANAGER_SECURITY_GROUP = "manager_security_group";
-    public static final String OUTPUT_FILENAME = "output.html";
     public static Region region = Region.getRegion(Regions.US_EAST_1);
 
 	/**

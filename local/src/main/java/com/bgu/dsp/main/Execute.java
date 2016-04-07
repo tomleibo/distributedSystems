@@ -28,7 +28,6 @@ public class Execute {
      */
     private static final String BUCKET_NAME = "bucket";
     private static final String INPUT_FILE_KEY = "inputFile";
-    private static final String OUTPUT_FILE_KEY = "outputFile";
     private static final String LOCAL_TO_MANAGER_QUEUE_NAME = "localToManager";
 
     private static String inputFileName;
@@ -118,7 +117,7 @@ public class Execute {
     }
 
     private static void createSqsLooper(String queueUrl) {
-        SqsLooper looper =new SqsLooper(terminate,queueUrl,executor);
+        SqsLooper looper =new SqsLooper(terminate,queueUrl,executor,outputFileName);
         executor.execute(looper);
     }
 

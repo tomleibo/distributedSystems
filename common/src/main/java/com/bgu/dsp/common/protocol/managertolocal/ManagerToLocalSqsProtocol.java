@@ -14,17 +14,15 @@ public class ManagerToLocalSqsProtocol {
         return "{" + OUTPUT_FILE_MESSAGE_TYPE + "}[" + bucketName + "," + keyName + "]";
     }
 
-    public static NewLocalCommand parse(String message) throws MalformedMessageException {
+    public static TweetsToHtmlConverter parse(String message) throws MalformedMessageException {
         String command = message.substring(message.indexOf("{") + 1, message.indexOf("}"));
-
         if (OUTPUT_FILE_MESSAGE_TYPE.equals(command)){
             return parseNewOutputFileMessage(message);
         }
-
         throw new MalformedMessageException(message);
     }
 
-    private static NewLocalCommand parseNewOutputFileMessage(String message) throws MalformedMessageException {
+    private static TweetsToHtmlConverter parseNewOutputFileMessage(String message) throws MalformedMessageException {
         String args = message.substring(message.indexOf("[") + 1, message.indexOf("]"));
         String[] argsArr = args.split(",");
 
@@ -35,6 +33,6 @@ public class ManagerToLocalSqsProtocol {
         String bucketName = argsArr[0];
         String key = argsArr[1];
 
-        return new NewOutputFileCommand(bucketName,key);
+        return new TweetsToHtmlConverter(bucketName,key);
     }
 }
