@@ -72,7 +72,15 @@ public class SQSUtils {
         return sqs.createQueue(createQueueRequest).getQueueUrl();
     }
 
+    public static String getQueueSize(String queueUrl){
+        String key = "ApproximateNumberOfMessages";
+        GetQueueAttributesResult approximateNumberOfMessages = sqs.getQueueAttributes(new GetQueueAttributesRequest(queueUrl).withAttributeNames(key));
+        return approximateNumberOfMessages.getAttributes().get(key);
+    }
+
+
     public static String getQueueUrlByName(String name) {
+        // TODO an AmazonServiceException exception is thrown if the queue doesn't exist
         return sqs.getQueueUrl(name).getQueueUrl();
     }
 

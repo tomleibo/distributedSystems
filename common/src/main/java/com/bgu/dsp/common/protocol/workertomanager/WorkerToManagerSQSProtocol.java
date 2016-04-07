@@ -3,6 +3,8 @@ package com.bgu.dsp.common.protocol.workertomanager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -24,8 +26,11 @@ public class WorkerToManagerSQSProtocol {
 		return gson.toJson(message);
 	}
 
+	// TODO remove
 	public static void main(String[] args) {
-		WorkerToManagerMessage m = new WorkerToManagerMessage(UUID.randomUUID(), "hello");
+		List<WorkerToManagerMessage.Entity> entities = new LinkedList<>();
+		entities.add(new WorkerToManagerMessage.Entity("eName", "eType"));
+		WorkerToManagerMessage m = new WorkerToManagerMessage(UUID.randomUUID(), "hello", entities, 2);
 		Gson gson = new GsonBuilder().create();
 
 		String json = gson.toJson(m);
@@ -37,3 +42,4 @@ public class WorkerToManagerSQSProtocol {
 	}
 
 }
+

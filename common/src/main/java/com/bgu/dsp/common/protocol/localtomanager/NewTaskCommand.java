@@ -4,16 +4,17 @@ import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
+import com.bgu.dsp.awsUtils.Utils;
+import com.bgu.dsp.common.protocol.managertolocal.ManagerToLocalSqsProtocol;
 import com.bgu.dsp.common.protocol.managertoworker.ManagerToWorkersSQSProtocol;
 import com.bgu.dsp.common.protocol.workertomanager.WorkerToManagerMessage;
 import com.bgu.dsp.common.protocol.workertomanager.WorkerToManagerSQSProtocol;
+import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -34,8 +35,8 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	private final String sqsName;
 	private final String bucketName;
 	private final String key;
-	private static int queueCounter = 0;
 	private final boolean terminate;
+	private final UUID taskID;
 
 	/**
 	 *
@@ -50,46 +51,89 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		this.bucketName = bucketName;
 		this.key = key;
 		this.terminate = terminate;
+		this.taskID = UUID.randomUUID();
 	}
 
 	@Override
 	public void run() {
+		String workersToManagerQueueName = null;
 		try {
 			String fileContent = getFileContent();
 			startWorkers(fileContent);
-			String workersToManagerQueueName = createQueue();
+			workersToManagerQueueName = createQueue();
 			List<UUID> uuids = postTweetsToQueue(fileContent, workersToManagerQueueName);
-			HashMap<UUID, String> replies = waitForAllReplies(workersToManagerQueueName, uuids);
-			logger.debug("Got " + replies.size() + " replies.\n" +
-					"Example: " + replies.values().iterator().next());// TODO remove this line and return actual value
+			LinkedList<String> replies = waitForAllReplies(workersToManagerQueueName, uuids);
+			publishResultsToS3(replies);
+			replyToLocal();
 		}
 		catch (IOException e){
 			// TODO tear down resources
 			logger.fatal(
 					MessageFormat.format("Command faild. sqsName={0}, bucketName={1}, key={2}", sqsName, bucketName, key),
 					e);
+		}finally {
+			if (workersToManagerQueueName != null){
+				logger.info("Deleting workers to manager queue " + workersToManagerQueueName);
+				String queueUrl = SQSUtils.getQueueUrlByName(workersToManagerQueueName);
+				SQSUtils.deleteQueue(queueUrl);
+			}
+
 		}
+	}
+
+	private void replyToLocal() {
+		String msg = ManagerToLocalSqsProtocol.newFileLocationMessage(Utils.MANAGER_TO_LOCAL_BUCKET_NAME, getResFilekey());
+		String queueUrl = SQSUtils.getQueueUrlByName(sqsName);
+		logger.debug("Manager sending reply to local in queue " + sqsName + "\nMessage is " + msg);
+		SQSUtils.sendMessage(queueUrl, msg);
+	}
+
+	private String getResFilekey() {
+		return "result_" + this.taskID.toString();
+	}
+
+	private void publishResultsToS3(LinkedList<String> replies) {
+		String content = new Gson().toJson(replies);
+		InputStream stream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+		logger.info("Manager uploading results to S3. File-key " + getResFilekey() +
+				", bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME + ".\n" +
+				"File length is " + content.length());
+		long start = System.currentTimeMillis();
+		S3Utils.uploadFile(Utils.MANAGER_TO_LOCAL_BUCKET_NAME, getResFilekey(), stream, content.length());
+		double time = (System.currentTimeMillis() - start) / 1000.0;
+		logger.debug("Upload took " + time + " seconds" );
 	}
 
 	/**
 	 * Wait for all the tasks sent to the workers to be completed
 	 */
-	private HashMap<UUID, String> waitForAllReplies(String workersToManagerQueueName, List<UUID> uuids) {
+	private LinkedList<String> waitForAllReplies(String workersToManagerQueueName, List<UUID> uuids) {
 		String workersToManagerQueueUrl = SQSUtils.getQueueUrlByName(workersToManagerQueueName);
 		HashMap<UUID, String> answers = new HashMap<>();
 		while (answers.size() < uuids.size()){
 			final int timeoutSeconds = 5;
 			Message rawMessage =  SQSUtils.getMessage(workersToManagerQueueUrl, timeoutSeconds);
 			if (rawMessage != null) {
+				logger.debug("Got message " + rawMessage);
 				WorkerToManagerMessage msg = WorkerToManagerSQSProtocol.parse(rawMessage.getBody());
 				answers.put(msg.getUuid(), msg.getMessage());
 			}
 			else {
+
+				sleep(1000);
 				logger.debug("No message in the queue, waiting for " + timeoutSeconds + " more seconds.\n" +
 						"Got " + answers.size() + "/" + uuids.size() + " messages.");
 			}
 		}
-		return answers;
+		return new LinkedList<>(answers.values());
+	}
+
+	private void sleep(int millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			logger.warn(e);
+		}
 	}
 
 	/**
@@ -130,13 +174,10 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		return workersToManagerQueueName;
 	}
 
-	/**
-	 * Generate a random queue name
-	 */
-	private synchronized String getNewQueueName() {
-		int id = queueCounter++;
-		return "queue_" + id;
+	private String getNewQueueName() {
+		return "queue_" + this.taskID.toString();
 	}
+
 
 	/**
 	 * Calculate the required number of workers and start them

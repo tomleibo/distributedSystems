@@ -41,6 +41,16 @@ public class Main {
 		}
 
 		logger.info("Shutting down executor, waiting for all tasks to be completed");
+		waitForAllTasks(executor);
+
+		logger.debug("Deleting " + MANAGER_TO_WORKERS_QUEUE_NAME + " queue");
+		SQSUtils.deleteQueue(managerToWorkersQueueUrl);
+
+		logger.info("All tasks completed, shutting down");
+
+	}
+
+	private static void waitForAllTasks(ExecutorService executor) {
 		executor.shutdown();
 
 		boolean keepWaiting = true;
@@ -50,11 +60,5 @@ public class Main {
 			} catch (InterruptedException e) {}
 			logger.info("Executor didn't finish, waiting " + EXECUTOR_TIMEOUT + " seconds for it to finish");
 		}
-
-		logger.debug("Deleting " + MANAGER_TO_WORKERS_QUEUE_NAME + " queue");
-		SQSUtils.deleteQueue(managerToWorkersQueueUrl);
-
-		logger.info("All tasks completed, shutting down");
-
 	}
 }

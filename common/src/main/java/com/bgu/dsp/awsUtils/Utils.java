@@ -27,6 +27,11 @@ public class Utils {
      */
     public static final String LOCAL_TO_MANAGER_QUEUE_NAME = "local-to-manager-queue";
 
+	/**
+	 * The bucket in which the manager is sending results to the local
+     */
+    public static final String MANAGER_TO_LOCAL_BUCKET_NAME = "manager-to-local-bucket";
+
     public static AWSCredentials getAwsCredentials() {
         AWSCredentials credentials = null;
         try {
