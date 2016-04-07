@@ -1,3 +1,5 @@
+package com.bgu.dsp.tests;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.sqs.model.Message;

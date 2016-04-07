@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.Base64;
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -109,8 +110,9 @@ public class S3Utils {
             MessageDigest md = MessageDigest.getInstance("MD5");
             try (DigestInputStream dis = new DigestInputStream(stream, md)) {
                 byte[] digest = md.digest();
-                String s = new String(Base64.encode(digest));
-                return s.equals(result.getContentMd5());
+                String fileMd5 = StringUtils.newStringUtf8(Base64.encode(digest));
+                String resultMd5 = result.getContentMd5();
+                return fileMd5.equals(resultMd5);
             }
             catch (IOException e) {
                 e.printStackTrace();

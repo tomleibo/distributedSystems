@@ -1,6 +1,6 @@
 package com.bgu.dsp.tests;
 
-import com.bgu.dsp.common.protocol.managertolocal.NewOutputFileCommand;
+import com.bgu.dsp.common.protocol.managertolocal.TweetsToHtmlConverter;
 import com.bgu.dsp.common.protocol.managertolocal.Tweet;
 import org.junit.Test;
 
@@ -21,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 public class managerToLocalTests {
     @Test
     public void testParseFileIntoTweetList() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
-        NewOutputFileCommand cmd = new NewOutputFileCommand("bucketName","keyName");
+        TweetsToHtmlConverter cmd = new TweetsToHtmlConverter("bucketName","keyName");
         Method method = cmd.getClass().getDeclaredMethod("parseFileIntoTweetList", File.class);
         method.setAccessible(true);
         List<Tweet> tweets = (List<Tweet>) method.invoke(cmd, getSampleTweetFile());
-        assertEquals(tweets.get(0), sampleTweetList().get(0));
-        assertEquals(tweets.get(1), sampleTweetList().get(1));
+        assertEquals(tweets.get(0).toString(), sampleTweetList().get(0).toString());
+        assertEquals(tweets.get(1).toString(), sampleTweetList().get(1).toString());
     }
 
     private List<Tweet> sampleTweetList() {
@@ -50,7 +50,7 @@ public class managerToLocalTests {
 
     @Test
     public void testConvertToHtml() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        NewOutputFileCommand cmd = new NewOutputFileCommand("bucketName","keyName");
+        TweetsToHtmlConverter cmd = new TweetsToHtmlConverter("bucketName","keyName");
         Method method = cmd.getClass().getDeclaredMethod("convertToHtml",List.class);
         method.setAccessible(true);
         String html = (String) method.invoke(cmd, sampleTweetList());
