@@ -1,7 +1,6 @@
 package com.bgu.dsp.common.protocol.managertolocal;
 
 import com.bgu.dsp.awsUtils.S3Utils;
-import com.bgu.dsp.awsUtils.Utils;
 import j2html.tags.ContainerTag;
 import j2html.tags.Tag;
 
@@ -12,7 +11,7 @@ import java.util.*;
 import static j2html.TagCreator.*;
 
 
-public class NewOutputFileCommand implements NewLocalCommand {
+public class NewOutputFileCommand {
     String bucketName;
     String key;
 
@@ -21,13 +20,12 @@ public class NewOutputFileCommand implements NewLocalCommand {
         this.key=key;
     }
 
-    @Override
     public void run() {
         try {
             File file = S3Utils.downloadFile(bucketName,key);
             List<Tweet> tweetList = parseFileIntoTweetList(file);
             String html = convertToHtml(tweetList);
-            writeToFile(Utils.OUTPUT_FILENAME,html);
+//            writeToFile(Utils.OUTPUT_FILENAME,html);//TODO
         }
         catch (IOException e) {
             downloadFailed(e);
