@@ -1,9 +1,12 @@
 package com.bgu.dsp.manager;
 
+import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
+import com.bgu.dsp.awsUtils.Utils;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
 import org.apache.log4j.Logger;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +21,9 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		S3Utils.createBucket(Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
+		logger.warn("Manager created bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME + " and will not delete it.\n" +
+				"This bucket is meant to save results and deliver them to the local application.");
 		// This queue should be already created by the local
 		String localToManagerQueueUrl = SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
 

@@ -111,7 +111,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		String workersToManagerQueueUrl = SQSUtils.getQueueUrlByName(workersToManagerQueueName);
 		HashMap<UUID, String> answers = new HashMap<>();
 		while (answers.size() < uuids.size()){
-			final int timeoutSeconds = 5;
+			final int timeoutSeconds = 20;
 			Message rawMessage =  SQSUtils.getMessage(workersToManagerQueueUrl, timeoutSeconds);
 			if (rawMessage != null) {
 				logger.debug("Got message " + rawMessage);
@@ -120,8 +120,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 			}
 			else {
 
-				sleep(1000);
-				logger.debug("No message in the queue, waiting for " + timeoutSeconds + " more seconds.\n" +
+				logger.debug("No replies from workers in the queue, waiting for " + timeoutSeconds + " more seconds.\n" +
 						"Got " + answers.size() + "/" + uuids.size() + " messages.");
 			}
 		}
