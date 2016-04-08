@@ -45,7 +45,7 @@ public class SQSUtils {
                 .withMaxNumberOfMessages(1)
                 .withWaitTimeSeconds(timeoutSeconds);
 
-        List<Message> messages = sqs.receiveMessage(queueUrl).getMessages();
+        List<Message> messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
 
         // We asked maxNumberOfMessages=1
         assert messages.size() <= 1;
