@@ -89,7 +89,7 @@ public class SQSUtils {
         AWSCredentials credentials = Utils.getAwsCredentials();
         sqs = new AmazonSQSClient(credentials);
         sqs.setRegion(Utils.region);
-        if ("DEV".equals(System.getenv("DSP_MODE"))){
+        if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_SQS"))){
             String host = "localhost";
             int port = 4568;
             String URL = "http://" + host + ":" + port;

@@ -28,7 +28,7 @@ public class S3Utils {
         s3 = new AmazonS3Client(credentials);
         s3.setRegion(Utils.region);
 
-        if ("DEV".equals(System.getenv("DSP_MODE"))){
+        if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_S3"))){
             String host = "localhost";
             int port = 4567;
             String URL = "http://" + host + ":" + port;

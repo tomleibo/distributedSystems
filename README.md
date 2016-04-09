@@ -13,7 +13,8 @@ follow the instruction in the repo to install
 follow the instruction in the repo to install.
 *We currently use a fork because the original repo doesn't have the `InstanceType`s that are using.*
 - To use the mocks instead of using AWS, add an environment variable
-`DSP_MODE` with the value `DEV`
+`DSP_MODE` with the value `DEV`.
+If you want to enable only specific mock, use `DSP_MODE_<service-name>=DEV`. For example `DSP_MODE_EC2=DEV`.
 **Note** that the mocks support a subset of the actual actions that
 are possible in AWS
 

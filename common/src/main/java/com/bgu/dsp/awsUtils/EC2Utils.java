@@ -31,7 +31,7 @@ public class EC2Utils {
         ec2 = new AmazonEC2Client(credentials);
         ec2.setRegion(Utils.region);
 
-        if ("DEV".equals(System.getenv("DSP_MODE"))){
+        if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_EC2"))){
             final String URL = "http://localhost:8000/aws-mock/ec2-endpoint/";
             ec2.setEndpoint(URL);
             logger.info("Using development EC2 with url " + URL);
@@ -92,7 +92,7 @@ public class EC2Utils {
      * Start n workers
      * @see #startWorkersAndWait
      */
-    private static List<String> startWorkers(int n){
+    public static List<String> startWorkers(int n){
         // TODO create a workers security group in AWS
         RunInstancesRequest request = new RunInstancesRequest().
                 withImageId(Utils.WORKER_IMAGE_ID).
