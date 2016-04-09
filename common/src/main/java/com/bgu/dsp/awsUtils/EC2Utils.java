@@ -30,6 +30,12 @@ public class EC2Utils {
         AWSCredentials credentials = Utils.getAwsCredentials();
         ec2 = new AmazonEC2Client(credentials);
         ec2.setRegion(Utils.region);
+
+        if ("DEV".equals(System.getenv("DSP_MODE"))){
+            final String URL = "http://localhost:8000/aws-mock/ec2-endpoint/";
+            ec2.setEndpoint(URL);
+            logger.info("Using development EC2 with url " + URL);
+        }
     }
 
     /**
