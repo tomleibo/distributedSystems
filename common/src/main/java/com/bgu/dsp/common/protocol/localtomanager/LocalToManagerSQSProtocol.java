@@ -27,9 +27,10 @@ public class LocalToManagerSQSProtocol {
 
 	/**
 	 * @return a message that represents a terminate message
+	 * @deprecated Use the terminate argument of {@link #newTaskMessage(String, String, String, boolean)}
 	 */
 	public static String newTerminateMessage() {
-		return "{" + TERMINATE + "}[]";
+		throw new UnsupportedOperationException("Use the terminate argument of newTaskMessage() instead of this method");
 	}
 
 
