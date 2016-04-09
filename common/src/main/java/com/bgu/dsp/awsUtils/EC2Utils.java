@@ -6,6 +6,7 @@ import com.amazonaws.services.ec2.model.*;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,22 @@ public class EC2Utils {
      */
     public static int countWorkers(){
         int instanceCount = 0;
+        DescribeInstancesResult describeInstancesResult = getAllWorkers();
+        for (Reservation reservation : describeInstancesResult.getReservations()) {
+            for (Instance instance : reservation.getInstances()) {
+                System.out.println(instance);
+                if (instance.getState().getCode() == STATE_CODE_PENDING ||
+                        instance.getState().getCode() == STATE_CODE_RUNNING){
+                    System.out.println(instance.getTags());
+                    instanceCount++;
+                }
+            }
+        }
+
+        return instanceCount;
+    }
+
+    private static DescribeInstancesResult getAllWorkers() {
         DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
 
         ArrayList<Filter> filters = new ArrayList<>();
@@ -64,20 +81,7 @@ public class EC2Utils {
         describeInstancesRequest.setFilters(filters);
 
 
-
-        DescribeInstancesResult describeInstancesResult = ec2.describeInstances(describeInstancesRequest);
-        for (Reservation reservation : describeInstancesResult.getReservations()) {
-            for (Instance instance : reservation.getInstances()) {
-                System.out.println(instance);
-                if (instance.getState().getCode() == STATE_CODE_PENDING ||
-                        instance.getState().getCode() == STATE_CODE_RUNNING){
-                    System.out.println(instance.getTags());
-                    instanceCount++;
-                }
-            }
-        }
-
-        return instanceCount;
+        return ec2.describeInstances(describeInstancesRequest);
     }
 
     /**
@@ -99,11 +103,21 @@ public class EC2Utils {
                 withMinCount(n).
                 withMaxCount(n).
                 withSecurityGroups(Utils.WORKERS_SECURITY_GROUP).
-                withInstanceType(InstanceType.T2Micro);
+                withInstanceType(Utils.WORKER_INSTANCE_TYPE).
+                withSecurityGroups(Utils.WORKERS_SECURITY_GROUP);
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
         List<String> instancesIds = runInstancesResult.getReservation().getInstances().stream().map(Instance::getInstanceId).collect(Collectors.toList());
+
+        tagWorkers(instancesIds);
         return instancesIds;
+    }
+
+    private static void tagWorkers(List<String> instancesIds) {
+        List<Tag> tags = new LinkedList<>();
+        tags.add(new Tag("Name", "worker"));
+        CreateTagsRequest createTagsRequest = new CreateTagsRequest(instancesIds, tags);
+        ec2.createTags(createTagsRequest);
     }
 
     /**
@@ -194,4 +208,24 @@ public class EC2Utils {
     }
 
 
+    public static void terminateAllWorkers() {
+        List<String> workesrIDs = new LinkedList<>();
+
+        DescribeInstancesResult allWorkers = getAllWorkers();
+        for (Reservation reservation : allWorkers.getReservations()) {
+            for (Instance instance : reservation.getInstances()) {
+                workesrIDs.add(instance.getInstanceId());
+            }
+        }
+        if (workesrIDs.size() == 0) {
+            logger.info("No worker discoverd, skipping shutdown");
+            return;
+        }
+        else {
+            logger.debug("Terminating " + workesrIDs.size() + " workers");
+        }
+
+        TerminateInstancesRequest terminateInstancesRequest = new TerminateInstancesRequest(workesrIDs);
+        ec2.terminateInstances(terminateInstancesRequest);
+    }
 }

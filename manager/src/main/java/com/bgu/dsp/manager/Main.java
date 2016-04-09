@@ -1,5 +1,6 @@
 package com.bgu.dsp.manager;
 
+import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.awsUtils.Utils;
@@ -52,9 +53,13 @@ public class Main {
 		logger.debug("Deleting " + MANAGER_TO_WORKERS_QUEUE_NAME + " queue");
 		SQSUtils.deleteQueue(managerToWorkersQueueUrl);
 
-		logger.info("All tasks completed, shutting down");
+		logger.info("Manager is now shutting down all the workers");
+		EC2Utils.terminateAllWorkers();
+
+		logger.info("All tasks completed. Manager is exiting");
 
 	}
+
 
 	private static void waitForAllTasks(ExecutorService executor) {
 		executor.shutdown();
@@ -62,9 +67,10 @@ public class Main {
 		boolean keepWaiting = true;
 		while (keepWaiting){
 			try {
-				keepWaiting = executor.awaitTermination(EXECUTOR_TIMEOUT, TimeUnit.SECONDS);
+				keepWaiting = !executor.awaitTermination(EXECUTOR_TIMEOUT, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {}
 			logger.info("Executor didn't finish, waiting " + EXECUTOR_TIMEOUT + " seconds for it to finish");
 		}
+		assert executor.isTerminated();
 	}
 }

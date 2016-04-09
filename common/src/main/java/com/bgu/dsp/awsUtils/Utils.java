@@ -5,6 +5,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.ec2.model.InstanceType;
 
 /**
  * Created by thinkPAD on 3/29/2016.
@@ -14,6 +15,7 @@ public class Utils {
     public static final String WORKERS_SECURITY_GROUP = "workers_security_group";
     public static final String MANAGER_INSTANCE_NAME = "manager";
     public static final String MANAGER_SECURITY_GROUP = "manager_security_group";
+    public static final InstanceType WORKER_INSTANCE_TYPE = InstanceType.T2Micro;
     public static Region region = Region.getRegion(Regions.US_EAST_1);
 
 	/**
