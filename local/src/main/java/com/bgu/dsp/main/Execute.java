@@ -32,7 +32,7 @@ public class Execute {
 
     private static String inputFileName;
     private static String outputFileName;
-    private static float filesToWorkersRatio;
+    private static float urlsToWorkersRatio;
     private static boolean terminate = false;
     private static String inQueueName;
     private static ExecutorService executor = Executors.newFixedThreadPool(4);
@@ -63,7 +63,7 @@ public class Execute {
         inputFileName = args[0];
         outputFileName = args[1];
         try {
-            filesToWorkersRatio = Float.parseFloat(args[2]);
+            urlsToWorkersRatio = Float.parseFloat(args[2]);
         }
         catch(NumberFormatException e ) {
             System.out.println("third argument should be a number.");
@@ -87,7 +87,7 @@ public class Execute {
     }
 
     private static void sendMessageToManager() {
-        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(inQueueName, BUCKET_NAME, INPUT_FILE_KEY, terminate);
+        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(inQueueName, BUCKET_NAME, INPUT_FILE_KEY, terminate, urlsToWorkersRatio);
         boolean messageSent = SQSUtils.sendMessage(queueUrl, messageBody);
         if (!messageSent) {
             sqsMessageNotSent(queueUrl,messageBody);

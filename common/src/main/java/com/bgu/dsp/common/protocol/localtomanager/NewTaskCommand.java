@@ -31,27 +31,55 @@ import static com.bgu.dsp.awsUtils.Utils.MANAGER_TO_WORKERS_QUEUE_NAME;
 public class NewTaskCommand implements LocalToManagerCommand {
 
 	final static Logger logger = Logger.getLogger(NewTaskCommand.class);
-	private final double linesPerWorker = 100.0;//TODO
 	private final String sqsName;
 	private final String bucketName;
 	private final String key;
 	private final boolean terminate;
 	private final UUID taskID;
+	private final float tasksPerWorker;
+
+	public String getSqsName() {
+		return sqsName;
+	}
+
+	public String getBucketName() {
+		return bucketName;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public boolean isTerminate() {
+		return terminate;
+	}
+
+	public UUID getTaskID() {
+		return taskID;
+	}
+
+	public float getTasksPerWorker() {
+		return tasksPerWorker;
+	}
 
 	/**
-	 *
-	 * @param bucketName The bucket to which the local saved the tweets file
-	 * @param key The key underwhich the local saved the tweets file.
 	 * @param sqsName A queue that was created by the local, to which the manager
 	 *                will send the reply (separate queue for each local)
+	 * @param bucketName The bucket to which the local saved the tweets file
+	 * @param key The key underwhich the local saved the tweets file.
 	 * @param terminate if true, the manager will not accept any more tasks after this one, and will terminate
+	 * @param tasksPerWorker - Used to determine the workers/tasks ration. referred to as <i>"n"</i> in the assignment description
 	 */
-	public NewTaskCommand(String sqsName, String bucketName, String key, boolean terminate){
+	public NewTaskCommand(String sqsName, String bucketName, String key, boolean terminate, float tasksPerWorker){
+		if (tasksPerWorker <= 0){
+			throw new IllegalArgumentException("tasksPerWorker must be > 0, Got " + tasksPerWorker);
+		}
 		this.sqsName = sqsName;
 		this.bucketName = bucketName;
 		this.key = key;
 		this.terminate = terminate;
 		this.taskID = UUID.randomUUID();
+		this.tasksPerWorker = tasksPerWorker;
 	}
 
 	@Override
@@ -195,7 +223,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	 */
 	private int getTotalNumOfRequiredWorkers(String fileContent) {
 		int numberOfLines = countLines(fileContent);
-		return (int)Math.ceil(numberOfLines / linesPerWorker);
+		return (int)Math.ceil(numberOfLines / (double)tasksPerWorker);
 	}
 
 	private String getFileContent() throws IOException {
