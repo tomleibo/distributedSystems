@@ -215,7 +215,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		int workersToStart = numOfWorkers - currentNumOfWorkers;
 		logger.info(currentNumOfWorkers + " workers are running\n" +
 				"Starting " + workersToStart + " more workers for total of " + numOfWorkers + " workers.");
-		// TODO start the workers
+		EC2Utils.startWorkers(workersToStart);
 	}
 
 	/**
