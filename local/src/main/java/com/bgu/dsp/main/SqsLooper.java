@@ -1,34 +1,27 @@
 package com.bgu.dsp.main;
 
 import com.bgu.dsp.awsUtils.SQSUtils;
+import com.bgu.dsp.awsUtils.Utils;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 import com.bgu.dsp.common.protocol.managertolocal.ManagerToLocalSqsProtocol;
 import com.bgu.dsp.common.protocol.managertolocal.TweetsToHtmlConverter;
 
 import java.io.*;
-import java.util.concurrent.ExecutorService;
 
 public class SqsLooper implements Runnable {
     private static final long SQS_LOOP_SLEEP_DURATION_MILLIS = 1000 * 10;
     private static final long DELAY_BETWEEN_TERMINATE_MESSAGE_AND_SHUTDOWN = 1000 * 60;
+    private final LocalEnv env;
 
-    private final String outputFileName;
-    private final boolean terminateWhenFinished;
-    private final String queueUrl;
-    private final ExecutorService executor;
-
-    public SqsLooper(boolean terminateWhenFinished, String queueUrl, ExecutorService executor, String outputFileName) {
-        this.terminateWhenFinished = terminateWhenFinished;
-        this.queueUrl=queueUrl;
-        this.executor =executor;
-        this.outputFileName= outputFileName;
+    public SqsLooper() {
+        env = LocalEnv.get();
     }
 
     private void finish() {
-        if (terminateWhenFinished) {
-            String messageBody = LocalToManagerSQSProtocol.newTerminateMessage();
-            SQSUtils.sendMessage(queueUrl,messageBody);
+        if (env.terminate) {
+            String messageBody = LocalToManagerSQSProtocol.newTaskMessage(Utils.LOCAL_TO_MANAGER_QUEUE_NAME,LocalEnv.BUCKET_NAME,LocalEnv.INPUT_FILE_KEY,env.terminate);
+            SQSUtils.sendMessage(env.outQueueUrl,messageBody);
             try {
                 Thread.sleep(DELAY_BETWEEN_TERMINATE_MESSAGE_AND_SHUTDOWN);
             }
@@ -36,13 +29,13 @@ public class SqsLooper implements Runnable {
                 e.printStackTrace();
             }
         }
-        executor.shutdownNow();
+        env.executor.shutdownNow();
     }
 
     @Override
     public void run() {
         do {
-            String msg = SQSUtils.getMessage(queueUrl).getBody();
+            String msg = SQSUtils.getMessage(env.outQueueUrl).getBody();
             if (msg!=null) {
                 try {
                     TweetsToHtmlConverter converter =ManagerToLocalSqsProtocol.parse(msg);
@@ -65,7 +58,7 @@ public class SqsLooper implements Runnable {
     }
 
     private void writeToFile(String html) {
-        File file = new File(outputFileName);
+        File file = new File(env.outputFileName);
         if (!file.exists()) {
             file.mkdirs();
             try {
@@ -75,7 +68,7 @@ public class SqsLooper implements Runnable {
                 outputFileNotCreated(file,e);
             }
         }
-        try (PrintWriter writer = new PrintWriter(outputFileName, "UTF-8")) {
+        try (PrintWriter writer = new PrintWriter(env.outputFileName, "UTF-8")) {
             writer.println(html);
             writer.close();
         } catch (FileNotFoundException e) {
