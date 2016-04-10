@@ -55,7 +55,7 @@ public class LocalMachine implements Runnable{
     }
 
     private  void sendMessageToManager() {
-        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(env.inQueueName, LocalEnv.BUCKET_NAME, LocalEnv.INPUT_FILE_KEY, env.terminate);
+        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(env.inQueueName, LocalEnv.BUCKET_NAME, LocalEnv.INPUT_FILE_KEY, env.terminate,env.filesToWorkersRatio);
         boolean messageSent = SQSUtils.sendMessage(env.outQueueUrl, messageBody);
         if (!messageSent) {
             sqsMessageNotSent(env.outQueueUrl,messageBody);

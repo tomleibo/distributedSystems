@@ -20,7 +20,9 @@ public class SqsLooper implements Runnable {
 
     private void finish() {
         if (env.terminate) {
-            String messageBody = LocalToManagerSQSProtocol.newTaskMessage(Utils.LOCAL_TO_MANAGER_QUEUE_NAME,LocalEnv.BUCKET_NAME,LocalEnv.INPUT_FILE_KEY,env.terminate);
+            String messageBody =
+                    LocalToManagerSQSProtocol.newTaskMessage(Utils.LOCAL_TO_MANAGER_QUEUE_NAME,LocalEnv.BUCKET_NAME,
+                            LocalEnv.INPUT_FILE_KEY,env.terminate,env.filesToWorkersRatio);
             SQSUtils.sendMessage(env.outQueueUrl,messageBody);
             try {
                 Thread.sleep(DELAY_BETWEEN_TERMINATE_MESSAGE_AND_SHUTDOWN);
