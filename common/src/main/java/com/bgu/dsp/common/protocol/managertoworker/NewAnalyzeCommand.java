@@ -4,6 +4,18 @@ import java.util.UUID;
 
 public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 
+	public UUID getUuid() {
+		return uuid;
+	}
+
+	public String getSqsQueueName() {
+		return sqsQueueName;
+	}
+
+	public String getTweetUrl() {
+		return tweetUrl;
+	}
+
 	private final UUID uuid;
 	private final String sqsQueueName;
 	private final String tweetUrl;

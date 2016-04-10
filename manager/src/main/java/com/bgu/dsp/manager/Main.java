@@ -1,9 +1,13 @@
 package com.bgu.dsp.manager;
 
+import com.bgu.dsp.awsUtils.EC2Utils;
+import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
+import com.bgu.dsp.awsUtils.Utils;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
 import org.apache.log4j.Logger;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +22,9 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		S3Utils.createBucket(Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
+		logger.warn("Manager created bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME + " and will not delete it.\n" +
+				"This bucket is meant to save results and deliver them to the local application.");
 		// This queue should be already created by the local
 		String localToManagerQueueUrl = SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
 
@@ -41,20 +48,29 @@ public class Main {
 		}
 
 		logger.info("Shutting down executor, waiting for all tasks to be completed");
+		waitForAllTasks(executor);
+
+		logger.debug("Deleting " + MANAGER_TO_WORKERS_QUEUE_NAME + " queue");
+		SQSUtils.deleteQueue(managerToWorkersQueueUrl);
+
+		logger.info("Manager is now shutting down all the workers");
+		EC2Utils.terminateAllWorkers();
+
+		logger.info("All tasks completed. Manager is exiting");
+
+	}
+
+
+	private static void waitForAllTasks(ExecutorService executor) {
 		executor.shutdown();
 
 		boolean keepWaiting = true;
 		while (keepWaiting){
 			try {
-				keepWaiting = executor.awaitTermination(EXECUTOR_TIMEOUT, TimeUnit.SECONDS);
+				keepWaiting = !executor.awaitTermination(EXECUTOR_TIMEOUT, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {}
 			logger.info("Executor didn't finish, waiting " + EXECUTOR_TIMEOUT + " seconds for it to finish");
 		}
-
-		logger.debug("Deleting " + MANAGER_TO_WORKERS_QUEUE_NAME + " queue");
-		SQSUtils.deleteQueue(managerToWorkersQueueUrl);
-
-		logger.info("All tasks completed, shutting down");
-
+		assert executor.isTerminated();
 	}
 }

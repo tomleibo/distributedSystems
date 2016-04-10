@@ -41,8 +41,8 @@ public class NewTaskCommandTest {
 	public void run() throws Exception {
 		NewTaskCommand c = new NewTaskCommand("" // TODO
 				, bucketName, key,
-				false // TODO
-		);
+				false, // TODO
+				2.0F);
 		c.run();
 	}
 }

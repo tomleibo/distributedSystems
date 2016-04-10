@@ -15,7 +15,7 @@ public class SQSHandler {
 	private final static Logger logger = Logger.getLogger(SQSHandler.class);
 
 	public LocalToManagerCommand getCommandFromQueue(String queueURL) throws MalformedMessageException {
-		Message message = SQSUtils.getMessage(queueURL, 60);
+		Message message = SQSUtils.getMessage(queueURL, 20);
 
 		return LocalToManagerSQSProtocol.parse(message.getBody());
 	}

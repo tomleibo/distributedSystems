@@ -45,7 +45,7 @@ public class SQSUtils {
                 .withMaxNumberOfMessages(1)
                 .withWaitTimeSeconds(timeoutSeconds);
 
-        List<Message> messages = sqs.receiveMessage(queueUrl).getMessages();
+        List<Message> messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
 
         // We asked maxNumberOfMessages=1
         assert messages.size() <= 1;
@@ -72,7 +72,15 @@ public class SQSUtils {
         return sqs.createQueue(createQueueRequest).getQueueUrl();
     }
 
+    public static String getQueueSize(String queueUrl){
+        String key = "ApproximateNumberOfMessages";
+        GetQueueAttributesResult approximateNumberOfMessages = sqs.getQueueAttributes(new GetQueueAttributesRequest(queueUrl).withAttributeNames(key));
+        return approximateNumberOfMessages.getAttributes().get(key);
+    }
+
+
     public static String getQueueUrlByName(String name) {
+        // TODO an AmazonServiceException exception is thrown if the queue doesn't exist
         return sqs.getQueueUrl(name).getQueueUrl();
     }
 
@@ -81,7 +89,7 @@ public class SQSUtils {
         AWSCredentials credentials = Utils.getAwsCredentials();
         sqs = new AmazonSQSClient(credentials);
         sqs.setRegion(Utils.region);
-        if ("DEV".equals(System.getenv("DSP_MODE"))){
+        if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_SQS"))){
             String host = "localhost";
             int port = 4568;
             String URL = "http://" + host + ":" + port;
