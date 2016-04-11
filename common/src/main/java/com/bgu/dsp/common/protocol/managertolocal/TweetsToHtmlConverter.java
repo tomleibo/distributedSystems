@@ -1,11 +1,11 @@
 package com.bgu.dsp.common.protocol.managertolocal;
 
 import com.bgu.dsp.awsUtils.S3Utils;
-import com.bgu.dsp.awsUtils.Utils;
 import j2html.tags.ContainerTag;
 import j2html.tags.Tag;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -36,7 +36,6 @@ public class TweetsToHtmlConverter {
 
     private List<Tweet> parseFileIntoTweetList(File file) {
         List<Tweet> result = new ArrayList<>();
-        final int DELIMITER = 0;
 
         List<String> lines=null;
         try {

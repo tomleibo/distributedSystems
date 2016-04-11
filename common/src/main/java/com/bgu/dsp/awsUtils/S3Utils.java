@@ -1,5 +1,6 @@
 package com.bgu.dsp.awsUtils;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
@@ -104,25 +105,14 @@ public class S3Utils {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(contentLength);
 
-        PutObjectResult result = s3.putObject(new PutObjectRequest(bucket, key, stream, metadata));
         try {
-            //FIXME: MD5 digest not outputting the same format as the result.
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            try (DigestInputStream dis = new DigestInputStream(stream, md)) {
-                byte[] digest = md.digest();
-                String fileMd5 = StringUtils.newStringUtf8(Base64.encode(digest));
-                String resultMd5 = result.getContentMd5();
-                return fileMd5.equals(resultMd5);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
+            PutObjectResult result = s3.putObject(new PutObjectRequest(bucket, key, stream, metadata));
+            return true;
         }
-        catch (NoSuchAlgorithmException nsae) {
-            nsae.printStackTrace();
+        catch (AmazonClientException e) {
             return false;
         }
+
     }
 
     /**

@@ -1,15 +1,16 @@
-package com.bgu.dsp.tests;
+package java.com.bgu.dsp.tests;
 
 import com.amazonaws.services.s3.model.Bucket;
 import org.junit.Test;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+
 import java.io.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.bgu.dsp.awsUtils.S3Utils.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -18,16 +19,15 @@ import static com.bgu.dsp.awsUtils.S3Utils.*;
 public class S3Tests {
     @Test
     public void test() throws IOException {
-        String bucketName = "randombucketdkfndfkq"+ UUID.randomUUID();
+        String bucketName = "randombucketname"+ UUID.randomUUID();
         String prefix = "key";
         String key = prefix +UUID.randomUUID();
         Bucket bucket = createBucket(bucketName);
         List<Bucket> buckets = getBuckets();
         assertTrue(buckets.stream().map(Bucket::getName).collect(Collectors.toList()).contains(bucketName));
         File sampleFile = createSampleFile();
-        /*assertTrue(*/uploadFile(bucket, key, sampleFile);
+        assertTrue(uploadFile(bucket, key, sampleFile));
         assertTrue(getFileNames(bucketName, prefix).contains(key));
-        //TODO: assert contents of uploaded and downloaded files equals
         deleteFile(bucketName, key);
         assertTrue(getFileNames(bucketName, prefix).isEmpty());
         deleteBucket(bucketName);

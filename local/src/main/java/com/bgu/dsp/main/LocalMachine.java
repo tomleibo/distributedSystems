@@ -7,6 +7,8 @@ import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 
 import java.io.File;
 import java.util.UUID;
@@ -15,7 +17,7 @@ import java.util.UUID;
  * Created by thinkPAD on 4/10/2016.
  */
 public class LocalMachine implements Runnable{
-
+    final static Logger log = Logger.getLogger(LocalMachine.class);
     LocalEnv env;
 
     public LocalMachine() {
@@ -31,9 +33,7 @@ public class LocalMachine implements Runnable{
             startManager();
         }
         startHeartBit();
-        env = LocalEnv.get();
         createSqsLooper();
-        
     }
 
     private  void startHeartBit() {
@@ -60,6 +60,7 @@ public class LocalMachine implements Runnable{
         if (!messageSent) {
             sqsMessageNotSent(env.outQueueUrl,messageBody);
         }
+        log.log(Priority.INFO,"message sent to server: "+messageBody);
     }
 
     private  Bucket getOrCreateBucketByName(String bucketName) {
@@ -82,6 +83,7 @@ public class LocalMachine implements Runnable{
         if (!S3Utils.uploadFile(bucket, LocalEnv.INPUT_FILE_KEY,inFile)){
             fileUploadFailed(bucket,inFile, LocalEnv.INPUT_FILE_KEY);
         }
+        log.log(Priority.INFO,"upload successful: "+inFile.getPath());
     }
 
     private  void createSqsLooper() {
@@ -101,27 +103,44 @@ public class LocalMachine implements Runnable{
     public  boolean isManagerNodeActive() {
         Instance ins  = EC2Utils.getManagerInstance();
         if (ins==null) {
+            log.log(Priority.WARN,"manager is not active. activating... ");
             return false;
         }
         return true;
     }
 
     private  void fileUploadFailed(Bucket bucket, File inFile, String inputFileKey) {
-        throw new RuntimeException("Tweet-File upload failed");
+        String message = "Tweet-File upload failed";
+        log.log(Priority.ERROR,message);
+        throw new RuntimeException(message);
     }
 
     private  void sqsMessageNotSent(String queueUrl, String messageBody) {
-        throw new RuntimeException("Sqs message sending failed. url: "+queueUrl+" body:\n"+messageBody);
+        String message = "Sqs message sending failed. url: " + queueUrl + " body:\n" + messageBody;
+        log.log(Priority.ERROR,message);
+        throw new RuntimeException(message);
     }
 
     private class HeartBit implements Runnable {
+        final int SLEEP_CYCLE = 1000*10;
+
         @Override
         public void run() {
-            if (!isManagerNodeActive()) {
-                startManager();
-                //TODO is this necessary?
-                sendMessageToManager();
+            try {
+                log.log(Priority.INFO,"heartbit started.");
+                while (true) {
+                    if (!isManagerNodeActive()) {
+                        startManager();
+                        //TODO is this necessary?
+                        sendMessageToManager();
+                    }
+                    Thread.sleep(SLEEP_CYCLE);
+                }
             }
+            catch (InterruptedException e) {
+                log.log(Priority.INFO,"heartbit interrupted",e);
+            }
+
         }
     }
 }
