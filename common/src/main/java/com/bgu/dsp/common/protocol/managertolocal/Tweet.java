@@ -1,5 +1,6 @@
 package com.bgu.dsp.common.protocol.managertolocal;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -7,7 +8,7 @@ import java.util.List;
  */
 
 
-public class Tweet {
+public class Tweet implements Serializable{
     String tweet;
     List<String> entities;
     int sentiment;
