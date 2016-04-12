@@ -64,7 +64,7 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
         }
         catch(IOException e) {
             log.error("error fetching url", e);
-            throw new RuntimeException("Failed to fetch URL.");
+            throw new RuntimeException("Failed to fetch URL.",e );
         }
     }
 

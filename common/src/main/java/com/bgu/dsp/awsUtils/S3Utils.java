@@ -110,7 +110,7 @@ public class S3Utils {
             return true;
         }
         catch (AmazonClientException e) {
-            return false;
+            throw e;
         }
 
     }

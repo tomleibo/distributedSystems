@@ -4,11 +4,10 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.*;
 import com.bgu.dsp.awsUtils.exceptions.NoSuchInstanceException;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class EC2Utils {
@@ -124,6 +123,11 @@ public class EC2Utils {
      * @see #startWorkersAndWait
      */
     public static List<String> startWorkers(int n){
+        if (n == 0){
+            // Can't send an empty RunInstanceRequest
+            return new LinkedList<String>();
+        }
+
         // TODO create a workers security group in AWS
         RunInstancesRequest request = new RunInstancesRequest().
                 withImageId(Utils.WORKER_IMAGE_ID).
@@ -131,7 +135,8 @@ public class EC2Utils {
                 withMaxCount(n).
                 withSecurityGroups(Utils.WORKERS_SECURITY_GROUP).
                 withInstanceType(Utils.WORKER_INSTANCE_TYPE).
-                withSecurityGroups(Utils.WORKERS_SECURITY_GROUP);
+                withSecurityGroups(Utils.WORKERS_SECURITY_GROUP).
+                withUserData(getWorkerUserDataScript());
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
         List<String> instancesIds = runInstancesResult.getReservation().getInstances().stream().map(Instance::getInstanceId).collect(Collectors.toList());
@@ -223,16 +228,48 @@ public class EC2Utils {
      */
     public static String startManager() {
         RunInstancesRequest request = new RunInstancesRequest().
-                withImageId(Utils.WORKER_IMAGE_ID).
+                withImageId(Utils.MANAGER_IMAGE_ID).
                 withMinCount(1).
                 withMaxCount(1).
                 withSecurityGroups(Utils.MANAGER_SECURITY_GROUP).
-                withInstanceType(InstanceType.T2Micro);
+                withInstanceType(InstanceType.T2Micro).
+                withUserData(getManagerUserDataScript());
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
         String instancesIds = runInstancesResult.getReservation().getInstances().get(0).getInstanceId();
         tagManager(instancesIds);
         return instancesIds;
+    }
+
+    private static String getManagerUserDataScript(){
+        ArrayList<String> lines = new ArrayList();
+        lines.add("#! /bin/bash");
+        lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-manager-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/manager.jar");
+        lines.add("java -jar manager.jar");
+        String str = new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
+        return str;
+    }
+
+    private static String getWorkerUserDataScript(){
+        ArrayList<String> lines = new ArrayList();
+        lines.add("#! /bin/bash");
+        lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-manager-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/worker.jar");
+        lines.add("java -jar worker.jar");
+        String str = new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
+        return str;
+    }
+
+    static String join(Collection<String> s, String delimiter) {
+        StringBuilder builder = new StringBuilder();
+        Iterator<String> iter = s.iterator();
+        while (iter.hasNext()) {
+            builder.append(iter.next());
+            if (!iter.hasNext()) {
+                break;
+            }
+            builder.append(delimiter);
+        }
+        return builder.toString();
     }
 
     private static void tagManager(String instancesId) {

@@ -3,8 +3,6 @@ package com.bgu.dsp.common.protocol.managertoworker;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.google.gson.Gson;
 
-import java.util.UUID;
-
 public class ManagerToWorkersSQSProtocol {
 
 
@@ -23,8 +21,7 @@ public class ManagerToWorkersSQSProtocol {
 	 * @throws MalformedMessageException if the message doesn't match the required pattern
 	 */
 	public static ManagerToWorkerCommand parse(String message) throws MalformedMessageException {
-		parseAnalyzeMessage(message);
-		throw new MalformedMessageException("Could not parse message " + message);
+		return parseAnalyzeMessage(message);
 	}
 
 	private static ManagerToWorkerCommand parseAnalyzeMessage(String message) throws MalformedMessageException {

@@ -17,6 +17,9 @@ public class SQSHandler {
 	public LocalToManagerCommand getCommandFromQueue(String queueURL) throws MalformedMessageException {
 		Message message = SQSUtils.getMessage(queueURL, 20);
 
+		if (message == null){
+			return null;
+		}
 		return LocalToManagerSQSProtocol.parse(message.getBody());
 	}
 }

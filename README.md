@@ -1,6 +1,9 @@
 ## Credentials
 First of all define your credentials as explained in [AWS documentation](http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html#using-the-default-credential-provider-chain)
 
+## External jars
+- Download the jars listed in the [worker readme](worker/jars/README.md)
+
 ## Dev environment
 ### Mocks
 - We use [fake_sqs](https://github.com/iain/fake_sqs) to mock AWS SQS,

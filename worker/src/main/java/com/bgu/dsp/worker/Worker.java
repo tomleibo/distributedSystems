@@ -30,7 +30,7 @@ public class Worker implements Runnable{
             }
             catch (MalformedMessageException e) {
                 malformedMessage(e);
-                throw new RuntimeException("failed to parse message");
+                throw new RuntimeException("failed to parse message", e);
             }
             cmd.execute();
         }

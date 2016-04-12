@@ -12,6 +12,7 @@ import com.amazonaws.services.ec2.model.InstanceType;
  */
 public class Utils {
     public static final String WORKER_IMAGE_ID = "ami-b66ed3de";
+    public static final String MANAGER_IMAGE_ID = "ami-08111162";
     public static final String WORKERS_SECURITY_GROUP = "workers_security_group";
     public static final String MANAGER_INSTANCE_NAME = "manager";
     public static final String MANAGER_SECURITY_GROUP = "manager_security_group";
@@ -32,6 +33,8 @@ public class Utils {
 	 * The bucket in which the manager is sending results to the local
      */
     public static final String MANAGER_TO_LOCAL_BUCKET_NAME = "manager-to-local-bucket";
+
+    public static final String LOCAL_TO_MANAGER_BUCKET_NAME = "local-to-manager-buckt";
 
     public static AWSCredentials getAwsCredentials() {
         AWSCredentials credentials = null;
