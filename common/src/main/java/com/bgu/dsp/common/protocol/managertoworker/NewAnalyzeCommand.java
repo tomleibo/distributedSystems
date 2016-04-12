@@ -1,6 +1,7 @@
 package com.bgu.dsp.common.protocol.managertoworker;
 
 import com.bgu.dsp.common.protocol.managertolocal.Tweet;
+import com.bgu.dsp.common.protocol.workertomanager.WorkerToManagerSQSProtocol;
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -72,7 +73,6 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
     }
 
     private void uploadTweetToQueue(Tweet tweet) {
-        //WorkerToManagerSQSProtocol.newCompletedMessage(new WorkerToManagerMessage())
+        WorkerToManagerSQSProtocol.newCompletedMessage(tweet);
     }
-
 }
