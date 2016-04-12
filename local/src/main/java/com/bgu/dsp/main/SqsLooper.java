@@ -23,7 +23,7 @@ public class SqsLooper implements Runnable {
     }
 
     private void finish() {
-        log.log(Priority.INFO,"finishing...");
+        log.info("finishing...");
         if (env.terminate) {
             String messageBody =
                     LocalToManagerSQSProtocol.newTaskMessage(Utils.LOCAL_TO_MANAGER_QUEUE_NAME,LocalEnv.BUCKET_NAME,
@@ -41,14 +41,14 @@ public class SqsLooper implements Runnable {
 
     @Override
     public void run() {
-        log.log(Priority.INFO,"starting sqs looper");
+        log.info("starting sqs looper");
         do {
             Message msg = SQSUtils.getMessage(env.inQueueUrl);
             if (msg!=null) {
                 try {
                     TweetsToHtmlConverter converter =ManagerToLocalSqsProtocol.parse(msg.getBody());
                     String html = converter.convert();
-                    log.log(Priority.INFO,"writing HTML to file: "+env.outputFileName);
+                    log.info("writing HTML to file: "+env.outputFileName);
                     writeToFile(html);
                     break;
                 }
@@ -60,7 +60,7 @@ public class SqsLooper implements Runnable {
                 Thread.sleep(SQS_LOOP_SLEEP_DURATION_MILLIS);
             }
             catch (InterruptedException e) {
-                log.log(Priority.INFO,"looper interrupted: ",e);
+                log.info("looper interrupted: ",e);
                 e.printStackTrace();
             }
         } while(true);
@@ -89,11 +89,11 @@ public class SqsLooper implements Runnable {
     }
 
     private void malFormedMessage(String msg, MalformedMessageException e) {
-        log.log(Priority.ERROR,"malformed message:",e);
+        log.error("malformed message:",e);
     }
 
     private void outputFileNotCreated(File file, IOException e) {
-        log.log(Priority.ERROR,"output file not created",e);
+        log.error("output file not created",e);
     }
 
 }

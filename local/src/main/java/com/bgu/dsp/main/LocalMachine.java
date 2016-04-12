@@ -60,7 +60,7 @@ public class LocalMachine implements Runnable{
         if (!messageSent) {
             sqsMessageNotSent(env.outQueueUrl,messageBody);
         }
-        log.log(Priority.INFO,"message sent to server: "+messageBody);
+        log.info("message sent to server: "+messageBody);
     }
 
     private  Bucket getOrCreateBucketByName(String bucketName) {
@@ -83,7 +83,7 @@ public class LocalMachine implements Runnable{
         if (!S3Utils.uploadFile(bucket, LocalEnv.INPUT_FILE_KEY,inFile)){
             fileUploadFailed(bucket,inFile, LocalEnv.INPUT_FILE_KEY);
         }
-        log.log(Priority.INFO,"upload successful: "+inFile.getPath());
+        log.info("upload successful: "+inFile.getPath());
     }
 
     private  void createSqsLooper() {
@@ -103,7 +103,7 @@ public class LocalMachine implements Runnable{
     public  boolean isManagerNodeActive() {
         Instance ins  = EC2Utils.getManagerInstance();
         if (ins==null) {
-            log.log(Priority.WARN,"manager is not active. activating... ");
+            log.warn("manager is not active. activating... ");
             return false;
         }
         return true;
@@ -111,13 +111,13 @@ public class LocalMachine implements Runnable{
 
     private  void fileUploadFailed(Bucket bucket, File inFile, String inputFileKey) {
         String message = "Tweet-File upload failed";
-        log.log(Priority.ERROR,message);
+        log.error(message);
         throw new RuntimeException(message);
     }
 
     private  void sqsMessageNotSent(String queueUrl, String messageBody) {
         String message = "Sqs message sending failed. url: " + queueUrl + " body:\n" + messageBody;
-        log.log(Priority.ERROR,message);
+        log.error(message);
         throw new RuntimeException(message);
     }
 
@@ -127,7 +127,7 @@ public class LocalMachine implements Runnable{
         @Override
         public void run() {
             try {
-                log.log(Priority.INFO,"heartbit started.");
+                log.info("heartbit started.");
                 while (true) {
                     if (!isManagerNodeActive()) {
                         startManager();
@@ -136,7 +136,7 @@ public class LocalMachine implements Runnable{
                 }
             }
             catch (InterruptedException e) {
-                log.log(Priority.INFO,"heartbit interrupted",e);
+                log.info("heartbit interrupted",e);
             }
 
         }

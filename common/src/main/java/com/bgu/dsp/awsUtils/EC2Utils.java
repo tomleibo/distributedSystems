@@ -125,7 +125,7 @@ public class EC2Utils {
     public static List<String> startWorkers(int n){
         if (n == 0){
             // Can't send an empty RunInstanceRequest
-            return new LinkedList<String>();
+            return new LinkedList<>();
         }
 
         // TODO create a workers security group in AWS
@@ -242,7 +242,7 @@ public class EC2Utils {
     }
 
     private static String getManagerUserDataScript(){
-        ArrayList<String> lines = new ArrayList();
+        ArrayList<String> lines = new ArrayList<>();
         lines.add("#! /bin/bash");
         lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-manager-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/manager.jar");
         lines.add("java -jar manager.jar");
@@ -251,7 +251,7 @@ public class EC2Utils {
     }
 
     private static String getWorkerUserDataScript(){
-        ArrayList<String> lines = new ArrayList();
+        ArrayList<String> lines = new ArrayList<>();
         lines.add("#! /bin/bash");
         lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-manager-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/worker.jar");
         lines.add("java -jar worker.jar");

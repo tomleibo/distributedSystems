@@ -27,7 +27,7 @@ static {
 
 	private static Set<String> ENTITY_TYPES;
 	private static void init() {
-		ENTITY_TYPES = new HashSet();
+		ENTITY_TYPES = new HashSet<>();
 		ENTITY_TYPES.add("PERSON");
 		ENTITY_TYPES.add("LOCATION");
 		ENTITY_TYPES.add("ORGANIZATION");
@@ -68,7 +68,7 @@ static {
 
 
 	public static Set<String> getEntities(String tweet){
-		Set<String> res = new HashSet<String>();
+		Set<String> res = new HashSet<>();
 		Properties props = new Properties();
 		props.put("annotators", "tokenize , ssplit, pos, lemma, ner");
 		StanfordCoreNLP NERPipeline =  new StanfordCoreNLP(props);
