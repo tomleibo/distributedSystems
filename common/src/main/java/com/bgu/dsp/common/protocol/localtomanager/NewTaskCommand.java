@@ -9,6 +9,7 @@ import com.bgu.dsp.common.protocol.managertolocal.ManagerToLocalSqsProtocol;
 import com.bgu.dsp.common.protocol.managertolocal.Tweet;
 import com.bgu.dsp.common.protocol.managertolocal.serialize.TwitsWriter;
 import com.bgu.dsp.common.protocol.managertoworker.ManagerToWorkersSQSProtocol;
+import com.bgu.dsp.common.protocol.managertoworker.NewAnalyzeCommand;
 import com.bgu.dsp.common.protocol.workertomanager.WorkerToManagerSQSProtocol;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -194,7 +195,8 @@ public class NewTaskCommand implements LocalToManagerCommand {
 
 		while( (line = bufReader.readLine()) != null ) {
 			UUID uuid = UUID.randomUUID();
-			String msg = ManagerToWorkersSQSProtocol.newAnalyzeMessage(line, workersToManagerQueueName, uuid);
+
+			String msg = ManagerToWorkersSQSProtocol.newAnalyzeMessage(new NewAnalyzeCommand(uuid, workersToManagerQueueName, line));
 
 			SQSUtils.sendMessage(managerToWorkersQueueUrl, msg);
 			uuids.add(uuid);
