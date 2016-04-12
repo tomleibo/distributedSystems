@@ -8,13 +8,83 @@
     <artifactId>dsp-1-worker</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+
+    <properties>
+        <jars-dir>${basedir}/jars</jars-dir>
+        <stanford-corenlp-path>${jars-dir}/stanford-corenlp-3.3.0.jar</stanford-corenlp-path>
+        <ejml-path>${jars-dir}/ejml-0.23.jar</ejml-path>
+        <standford-models-path>${jars-dir}/stanford-corenlp-3.3.0-models.jar</standford-models-path>
+        <jollyday-path>${jars-dir}/jollyday-0.4.7.jar</jollyday-path>
+    </properties>
+
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.bgu.dsp.worker.Worker</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>dsp</groupId>
             <artifactId>common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        
+
+        <dependency>
+            <groupId>com.googlecode.efficient-java-matrix-library</groupId>
+            <artifactId>ejml</artifactId>
+            <scope>system</scope>
+            <version>0.23</version>
+            <systemPath>${ejml-path}</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>de.jollyday</groupId>
+            <artifactId>jollyday</artifactId>
+            <scope>system</scope>
+            <version>0.4.7</version>
+            <systemPath>${jollyday-path}</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>edu.stanford.nlp</groupId>
+            <artifactId>stanford-corenlp</artifactId>
+            <version>3.3.0</version>
+            <scope>system</scope>
+            <systemPath>${stanford-corenlp-path}</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>edu.stanford.nlp</groupId>
+            <artifactId>stanford-corenlp</artifactId>
+            <classifier>models</classifier>
+            <version>3.3.0</version>
+            <scope>system</scope>
+            <systemPath>${standford-models-path}</systemPath>
+
+        </dependency>
 
     </dependencies>
 

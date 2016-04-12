@@ -1,3 +1,5 @@
+package com.bgu.dsp.worker;
+
 import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.awsUtils.Utils;
