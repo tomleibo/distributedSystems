@@ -1,8 +1,17 @@
 package com.bgu.dsp.common.protocol.managertoworker;
 
+import com.bgu.dsp.common.protocol.managertolocal.Tweet;
+import com.bgu.dsp.common.protocol.workertomanager.WorkerToManagerSQSProtocol;
+import org.apache.log4j.Logger;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.io.IOException;
 import java.util.UUID;
 
 public class NewAnalyzeCommand implements ManagerToWorkerCommand {
+
+    final static Logger log = Logger.getLogger(NewAnalyzeCommand.class);
 
 	public UUID getUuid() {
 		return uuid;
@@ -19,6 +28,8 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 	private final UUID uuid;
 	private final String sqsQueueName;
 	private final String tweetUrl;
+
+
 
 	@Override
 	public String toString() {
@@ -37,7 +48,31 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 
 	@Override
 	public void execute() {
-		// TODO implement by the workers
-		System.out.println(toString());
+        String title= getTitleFromUrl();
+        Tweet tweet = processTweetFromTitle(title);
+        uploadTweetToQueue(tweet);
 	}
+
+
+    private String getTitleFromUrl() {
+        Document doc;
+        try {
+            doc = Jsoup.connect(tweetUrl).get();
+            String title = doc.title();
+            return title;
+        }
+        catch(IOException e) {
+            log.error("error fetching url", e);
+            throw new RuntimeException("Failed to fetch URL.");
+        }
+    }
+
+    private Tweet processTweetFromTitle(String title) {
+        System.out.println(title);
+        return null;
+    }
+
+    private void uploadTweetToQueue(Tweet tweet) {
+        WorkerToManagerSQSProtocol.newCompletedMessage(tweet);
+    }
 }
