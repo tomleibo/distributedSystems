@@ -1,4 +1,4 @@
-package java.com.bgu.dsp.tests;
+package com.bgu.dsp.tests;
 
 import com.amazonaws.services.s3.model.Bucket;
 import org.junit.Test;

@@ -4,10 +4,6 @@ import com.bgu.dsp.common.protocol.managertolocal.Tweet;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-
 /**
  * Used to pass messages from the workers to the manager
  * Implemented using json serialization

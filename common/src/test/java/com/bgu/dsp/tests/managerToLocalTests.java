@@ -1,4 +1,4 @@
-package java.com.bgu.dsp.tests;
+package com.bgu.dsp.tests;
 
 import com.bgu.dsp.common.protocol.managertolocal.TweetsToHtmlConverter;
 import com.bgu.dsp.common.protocol.managertolocal.Tweet;
