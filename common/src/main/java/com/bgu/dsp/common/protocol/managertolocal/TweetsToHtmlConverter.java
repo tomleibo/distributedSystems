@@ -1,18 +1,24 @@
 package com.bgu.dsp.common.protocol.managertolocal;
 
 import com.bgu.dsp.awsUtils.S3Utils;
+import com.bgu.dsp.common.protocol.managertolocal.serialize.IllegalSerializedObjectException;
+import com.bgu.dsp.common.protocol.managertolocal.serialize.TwitsReader;
 import j2html.tags.ContainerTag;
 import j2html.tags.Tag;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.*;
 
 import static j2html.TagCreator.*;
 
 
 public class TweetsToHtmlConverter {
+    final static Logger log = Logger.getLogger(TweetsToHtmlConverter.class);
+
     private static final String ERROR_MESSAGE = "download failed";
     private final String bucketName;
     private final String key;
@@ -36,29 +42,26 @@ public class TweetsToHtmlConverter {
 
     private List<Tweet> parseFileIntoTweetList(File file) {
         List<Tweet> result = new ArrayList<>();
-
-        List<String> lines=null;
-        try {
-            lines = Files.readAllLines(file.toPath());
+        try (TwitsReader reader = new TwitsReader(file.getPath())) {
+            reader.init();
+            while (true) {
+               Tweet t = reader.read();
+               result.add(t);
+            }
+        }
+        catch (EOFException e) {
+            //everything is alright
         }
         catch (IOException e) {
-            fileReadFailed(file,e);
+            log.log(Priority.ERROR,"file read failed.",e);
         }
-        for (String line : lines) {
-            Tweet t = parseOneTweet(line);
-            result.add(t);
+        catch (ClassNotFoundException e) {
+            log.log(Priority.ERROR, "class not found.", e);
+        }
+        catch (IllegalSerializedObjectException e) {
+            log.log(Priority.ERROR, "illegal serialized object.", e);
         }
         return result;
-    }
-
-    private Tweet parseOneTweet(String line) {
-        Tweet t = new Tweet();
-        String[] substrs = line.split("\0");
-        String ents = substrs[2].substring(2,substrs[2].length()-1);
-        t.setTweet(substrs[1].substring(1));
-        t.setSentiment(Integer.parseInt(substrs[3].substring(1)));
-        t.setEntities(Arrays.asList(ents.split(",")));
-        return t;
     }
 
     private String convertToHtml(List<Tweet> matrix) {
@@ -98,10 +101,10 @@ public class TweetsToHtmlConverter {
 
 
     private void downloadFailed(IOException e) {
-        //TODO
+        log.log(Priority.ERROR,"download failed.");
     }
 
     private void fileReadFailed(File file, IOException e) {
-        //TODO
+        log.log(Priority.ERROR,"file read failed.");
     }
 }

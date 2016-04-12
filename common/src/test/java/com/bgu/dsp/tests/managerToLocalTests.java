@@ -1,4 +1,4 @@
-package com.bgu.dsp.tests;
+package java.com.bgu.dsp.tests;
 
 import com.bgu.dsp.common.protocol.managertolocal.TweetsToHtmlConverter;
 import com.bgu.dsp.common.protocol.managertolocal.Tweet;
@@ -42,8 +42,6 @@ public class managerToLocalTests {
         temp.setWritable(true);
         String data="2\0 tweet tweet Tom Bash\0 [Tom:NAME,Bash:Location]\0 3\0\n" +
                 "0\0 3489034niu'\"$%#&$&^&%$@5wef948r4934b34f8h\0 []\0 2\0";
-
-        //* per tweet: numberOfEnts \0 tweet \0 (entities) [name:TYPE,...] \0 (sentiment) int(0-4) \0
         Files.write(Paths.get(temp.getPath()), data.getBytes(), StandardOpenOption.CREATE);
         return temp;
     }

@@ -2,10 +2,7 @@ package com.bgu.dsp.common.protocol.managertolocal.serialize;
 
 import com.bgu.dsp.common.protocol.managertolocal.Tweet;
 
-import java.io.EOFException;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
 
 /**
  * deserialize instances of {@link com.bgu.dsp.common.protocol.managertolocal.Tweet} from a file.  <br>
@@ -17,7 +14,7 @@ import java.io.ObjectInputStream;
  * @see TwitsWriter
  *
  */
-public class TwitsReader {
+public class TwitsReader implements Closeable{
 
 	private final String filePath;
 	private FileInputStream inputStream;
