@@ -2,6 +2,8 @@ package com.bgu.dsp.awsUtils;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.*;
@@ -25,11 +27,14 @@ public class S3Utils {
     }
 
     public static void init() {
-        AWSCredentials credentials = Utils.getAwsCredentials();
-        s3 = new AmazonS3Client(credentials);
-        s3.setRegion(Utils.region);
+        s3 = new AmazonS3Client(new InstanceProfileCredentialsProvider());
 
         if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_S3"))){
+            //TODO is this neccessary on local mock mode?
+            AWSCredentials credentials = Utils.getAwsCredentials();
+            s3 = new AmazonS3Client(credentials);
+            s3.setRegion(Utils.region);
+
             String host = "localhost";
             int port = 4567;
             String URL = "http://" + host + ":" + port;

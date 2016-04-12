@@ -1,6 +1,8 @@
 package com.bgu.dsp.awsUtils;
 
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
@@ -8,9 +10,6 @@ import org.apache.log4j.Logger;
 
 import java.util.List;
 
-/**
- * Created by thinkPAD on 3/29/2016.
- */
 public class SQSUtils {
     final static Logger logger = Logger.getLogger(SQSUtils.class);
 
@@ -78,18 +77,22 @@ public class SQSUtils {
         return approximateNumberOfMessages.getAttributes().get(key);
     }
 
+    /**
+     *  an AmazonServiceException exception is thrown if the queue doesn't exist
+     */
+    public static String getQueueUrlByName (String name) {
 
-    public static String getQueueUrlByName(String name) {
-        // TODO an AmazonServiceException exception is thrown if the queue doesn't exist
         return sqs.getQueueUrl(name).getQueueUrl();
     }
 
 
     public static void init() {
-        AWSCredentials credentials = Utils.getAwsCredentials();
-        sqs = new AmazonSQSClient(credentials);
-        sqs.setRegion(Utils.region);
+        sqs = new AmazonSQSClient(new InstanceProfileCredentialsProvider());
         if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_SQS"))){
+            //TODO is this neccessary on local mock mode?
+            AWSCredentials credentials = Utils.getAwsCredentials();
+            sqs = new AmazonSQSClient(credentials);
+            sqs.setRegion(Utils.region);
             String host = "localhost";
             int port = 4568;
             String URL = "http://" + host + ":" + port;
