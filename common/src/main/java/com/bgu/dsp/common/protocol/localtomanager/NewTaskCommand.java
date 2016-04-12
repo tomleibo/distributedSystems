@@ -137,6 +137,12 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		S3Utils.uploadFile(Utils.MANAGER_TO_LOCAL_BUCKET_NAME, resFilekey, new File(resFilekey));
 		double time = (System.currentTimeMillis() - start) / 1000.0;
 		logger.debug("Upload took " + time + " seconds" );
+
+		File file = new File(resFilekey);
+		if (! file.delete()){
+			logger.warn("Manager could not delete results file after uploading it to S3.\n" +
+					"File path is " + file.getAbsolutePath() );
+		}
 	}
 
 	/**
