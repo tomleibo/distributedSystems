@@ -11,9 +11,6 @@ public class Worker implements Runnable{
     private final String inQueueUrl;
 
     public static void main(String args[]) {
-        String url = SQSUtils.createQueue(Utils.MANAGER_TO_WORKERS_QUEUE_NAME);
-        //SQSUtils.sendMessage(url,"");
-
         Worker worker = new Worker();
         worker.run();
     }
@@ -44,5 +41,6 @@ public class Worker implements Runnable{
     }
 
     private void malformedMessage(MalformedMessageException e) {
+
     }
 }

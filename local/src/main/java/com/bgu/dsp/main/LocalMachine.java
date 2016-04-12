@@ -131,8 +131,6 @@ public class LocalMachine implements Runnable{
                 while (true) {
                     if (!isManagerNodeActive()) {
                         startManager();
-                        //TODO is this necessary?
-                        sendMessageToManager();
                     }
                     Thread.sleep(SLEEP_CYCLE);
                 }
