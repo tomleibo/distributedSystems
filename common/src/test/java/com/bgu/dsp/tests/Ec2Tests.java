@@ -1,4 +1,4 @@
-package com.bgu.dsp.tests;
+package java.com.bgu.dsp.tests;
 
 import com.amazonaws.services.ec2.model.InstanceState;
 import com.bgu.dsp.awsUtils.EC2Utils;
