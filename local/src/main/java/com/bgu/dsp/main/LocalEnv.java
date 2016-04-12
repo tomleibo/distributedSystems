@@ -1,5 +1,8 @@
 package com.bgu.dsp.main;
 
+import com.bgu.dsp.awsUtils.Utils;
+import com.sun.corba.se.impl.javax.rmi.CORBA.Util;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -7,9 +10,9 @@ import java.util.concurrent.Executors;
  * Created by thinkPAD on 4/4/2016.
  */
 public class LocalEnv {
-    public static final String BUCKET_NAME = "bucket";
+    public static final String BUCKET_NAME = Utils.LOCAL_TO_MANAGER_BUCKET_NAME;
     public static final String INPUT_FILE_KEY = "inputFile";
-    public static final String LOCAL_TO_MANAGER_QUEUE_NAME = "localToManager";
+    public static final String LOCAL_TO_MANAGER_QUEUE_NAME = Utils.LOCAL_TO_MANAGER_QUEUE_NAME;
     public static final int N_THREADS = 4;
 
     private static LocalEnv instance = null;

@@ -1,5 +1,6 @@
 package com.bgu.dsp.main;
 
+import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.awsUtils.Utils;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
@@ -42,17 +43,17 @@ public class SqsLooper implements Runnable {
     public void run() {
         log.log(Priority.INFO,"starting sqs looper");
         do {
-            String msg = SQSUtils.getMessage(env.outQueueUrl).getBody();
+            Message msg = SQSUtils.getMessage(env.inQueueUrl);
             if (msg!=null) {
                 try {
-                    TweetsToHtmlConverter converter =ManagerToLocalSqsProtocol.parse(msg);
+                    TweetsToHtmlConverter converter =ManagerToLocalSqsProtocol.parse(msg.getBody());
                     String html = converter.convert();
                     log.log(Priority.INFO,"writing HTML to file: "+env.outputFileName);
                     writeToFile(html);
                     break;
                 }
                 catch (MalformedMessageException e) {
-                    malFormedMessage(msg,e);
+                    malFormedMessage(msg.getBody(),e);
                 }
             }
             try {
