@@ -1,5 +1,6 @@
 package com.bgu.dsp.common.protocol.workertomanager;
 
+import com.bgu.dsp.common.protocol.managertolocal.Tweet;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -13,33 +14,20 @@ import java.util.UUID;
  */
 public class WorkerToManagerSQSProtocol {
 
-	public static WorkerToManagerMessage parse(String json) {
+	public static Tweet parse(String json) {
 		Gson gson = new GsonBuilder().create();
-		return gson.fromJson(json, WorkerToManagerMessage.class);
+		return gson.fromJson(json, Tweet.class);
 	}
 
 	/**
-	 * Return a json that represents the given message
+	 * Return a json that represents the given tweet <br>
+	 * This message is to be written to the sqs queue by the worker
 	 */
-	public static String newCompletedMessage(WorkerToManagerMessage message){
+	public static String newCompletedMessage(Tweet message){
 		Gson gson = new GsonBuilder().create();
 		return gson.toJson(message);
 	}
 
-	// TODO remove
-	public static void main(String[] args) {
-		List<WorkerToManagerMessage.Entity> entities = new LinkedList<>();
-		entities.add(new WorkerToManagerMessage.Entity("eName", "eType"));
-		WorkerToManagerMessage m = new WorkerToManagerMessage(UUID.randomUUID(), "hello", entities, 2);
-		Gson gson = new GsonBuilder().create();
-
-		String json = gson.toJson(m);
-
-		System.out.println(json);
-
-		System.out.println(parse(json));
-
-	}
 
 }
 

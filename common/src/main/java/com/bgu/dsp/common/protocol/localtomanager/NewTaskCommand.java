@@ -6,17 +6,15 @@ import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.awsUtils.Utils;
 import com.bgu.dsp.common.protocol.managertolocal.ManagerToLocalSqsProtocol;
+import com.bgu.dsp.common.protocol.managertolocal.Tweet;
+import com.bgu.dsp.common.protocol.managertolocal.serialize.TwitsWriter;
 import com.bgu.dsp.common.protocol.managertoworker.ManagerToWorkersSQSProtocol;
-import com.bgu.dsp.common.protocol.workertomanager.WorkerToManagerMessage;
 import com.bgu.dsp.common.protocol.workertomanager.WorkerToManagerSQSProtocol;
-import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -90,7 +88,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 			startWorkers(fileContent);
 			workersToManagerQueueName = createQueue();
 			List<UUID> uuids = postTweetsToQueue(fileContent, workersToManagerQueueName);
-			LinkedList<String> replies = waitForAllReplies(workersToManagerQueueName, uuids);
+			List<Tweet> replies = waitForAllReplies(workersToManagerQueueName, uuids);
 			publishResultsToS3(replies);
 			replyToLocal();
 		}
@@ -120,14 +118,23 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		return "result_" + this.taskID.toString();
 	}
 
-	private void publishResultsToS3(LinkedList<String> replies) {
-		String content = new Gson().toJson(replies);
-		InputStream stream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
-		logger.info("Manager uploading results to S3. File-key " + getResFilekey() +
-				", bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME + ".\n" +
-				"File length is " + content.length());
+	private void publishResultsToS3(List<Tweet> replies) throws IOException {
+
+		String resFilekey = getResFilekey();
+		TwitsWriter twitsWriter = new TwitsWriter(resFilekey);
+		twitsWriter.init();
+
+		for (Tweet reply : replies) {
+			twitsWriter.write(reply);
+		}
+		twitsWriter.close();
+
+		logger.info("Manager uploading results to S3. File-key " + resFilekey +
+				", bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
+
 		long start = System.currentTimeMillis();
-		S3Utils.uploadFile(Utils.MANAGER_TO_LOCAL_BUCKET_NAME, getResFilekey(), stream, content.length());
+
+		S3Utils.uploadFile(Utils.MANAGER_TO_LOCAL_BUCKET_NAME, resFilekey, new File(resFilekey));
 		double time = (System.currentTimeMillis() - start) / 1000.0;
 		logger.debug("Upload took " + time + " seconds" );
 	}
@@ -135,16 +142,16 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	/**
 	 * Wait for all the tasks sent to the workers to be completed
 	 */
-	private LinkedList<String> waitForAllReplies(String workersToManagerQueueName, List<UUID> uuids) {
+	private List<Tweet> waitForAllReplies(String workersToManagerQueueName, List<UUID> uuids) {
 		String workersToManagerQueueUrl = SQSUtils.getQueueUrlByName(workersToManagerQueueName);
-		HashMap<UUID, String> answers = new HashMap<>();
+		List<Tweet> answers = new LinkedList<>();
 		while (answers.size() < uuids.size()){
 			final int timeoutSeconds = 20;
 			Message rawMessage =  SQSUtils.getMessage(workersToManagerQueueUrl, timeoutSeconds);
 			if (rawMessage != null) {
 				logger.debug("Got message " + rawMessage);
-				WorkerToManagerMessage msg = WorkerToManagerSQSProtocol.parse(rawMessage.getBody());
-				answers.put(msg.getUuid(), msg.getMessage());
+				Tweet tweet = WorkerToManagerSQSProtocol.parse(rawMessage.getBody());
+				answers.add(tweet);
 			}
 			else {
 
@@ -152,7 +159,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 						"Got " + answers.size() + "/" + uuids.size() + " messages.");
 			}
 		}
-		return new LinkedList<>(answers.values());
+		return answers;
 	}
 
 	private void sleep(int millis) {
