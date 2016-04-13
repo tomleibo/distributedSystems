@@ -50,9 +50,6 @@ public class Main {
 		logger.info("Shutting down executor, waiting for all tasks to be completed");
 		waitForAllTasks(executor);
 
-		logger.debug("Deleting " + MANAGER_TO_WORKERS_QUEUE_NAME + " queue");
-		SQSUtils.deleteQueue(managerToWorkersQueueUrl);
-
 		logger.info("Manager is now shutting down all the workers");
 		EC2Utils.terminateAllWorkers();
 
