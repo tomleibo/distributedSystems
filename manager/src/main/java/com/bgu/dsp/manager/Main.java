@@ -20,6 +20,20 @@ import static com.bgu.dsp.awsUtils.Utils.MANAGER_TO_WORKERS_QUEUE_NAME;
 public class Main {
 	final static Logger logger = Logger.getLogger(Main.class);
 
+	private static Integer expectedNumberOfWorkers = 0;
+
+	public static int getExpectedNumberOfWorkers() {
+		synchronized (expectedNumberOfWorkers) {
+			return expectedNumberOfWorkers;
+		}
+	}
+
+	public static void setExpectedNumberOfWorkers(int expectedNumberOfWorkers) {
+		synchronized (Main.expectedNumberOfWorkers) {
+			Main.expectedNumberOfWorkers = Math.max(expectedNumberOfWorkers, Main.expectedNumberOfWorkers);
+		}
+	}
+
 	public static final int EXECUTOR_TIMEOUT = 60;
 
 	public static void main(String[] args) {
@@ -39,14 +53,14 @@ public class Main {
 			try {
 				Message messageFromQueue = sqsHandler.getCommandFromQueue(localToManagerQueueUrl);
 				LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
-				if (messageFromQueue != null) {
+
+				setExpectedNumberOfWorkers(commandFromQueue.getTotalNumOfRequiredWorkers());
+
+				if (commandFromQueue != null) {
 					executor.execute(
-							new Runnable() {
-								@Override
-								public void run() {
-									commandFromQueue.run();
-									SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
-								}
+							() -> {
+								commandFromQueue.run();
+								SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
 							});
 					if (commandFromQueue.shouldTerminate()) {
 						break;

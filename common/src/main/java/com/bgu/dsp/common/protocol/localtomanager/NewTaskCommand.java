@@ -86,7 +86,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		String workersToManagerQueueName = null;
 		try {
 			String fileContent = getFileContent();
-			startWorkers(fileContent);
+			startWorkers();
 			workersToManagerQueueName = createQueue();
 			List<UUID> uuids = postTweetsToQueue(fileContent, workersToManagerQueueName);
 			List<Tweet> replies = waitForAllReplies(workersToManagerQueueName, uuids);
@@ -217,15 +217,15 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	}
 
 	private String getNewQueueName() {
-		return "queue_" + this.taskID.toString();
+		return "task_queue_" + this.taskID.toString();
 	}
 
 
 	/**
 	 * Calculate the required number of workers and start them
 	 */
-	private void startWorkers(String fileContent) {
-		int numOfWorkers = getTotalNumOfRequiredWorkers(fileContent);
+	private void startWorkers() {
+		int numOfWorkers = getTotalNumOfRequiredWorkers();
 		int currentNumOfWorkers = EC2Utils.countWorkers();
 		int workersToStart = numOfWorkers - currentNumOfWorkers;
 		if (workersToStart <= 0){
@@ -236,13 +236,21 @@ public class NewTaskCommand implements LocalToManagerCommand {
 					"Starting " + workersToStart + " more workers for total of " + numOfWorkers + " workers.");
 			EC2Utils.startWorkers(workersToStart);
 		}
+
 	}
 
 	/**
 	 * Calc the total number of workers that are required for this task
 	 */
-	private int getTotalNumOfRequiredWorkers(String fileContent) {
-		int numberOfLines = countLines(fileContent);
+	@Override
+	public int getTotalNumOfRequiredWorkers() {
+		int numberOfLines = 0;
+		try {
+			numberOfLines = countLines();
+		} catch (IOException e) {
+			logger.error("Failed to read tweets file", e);
+			return 0;
+		}
 		return (int)Math.ceil(numberOfLines / (double)tasksPerWorker);
 	}
 
@@ -256,7 +264,8 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		}
 	}
 
-	private int countLines(String fileContent) {
+	private int countLines() throws IOException {
+		String fileContent = getFileContent();
 		Matcher m = Pattern.compile("\r\n|\r|\n").matcher(fileContent);
 		int lines = 1;
 		while (m.find()) {

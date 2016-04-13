@@ -13,11 +13,6 @@ public class SQSHandler {
 	private final static Logger logger = Logger.getLogger(SQSHandler.class);
 
 	public Message getCommandFromQueue(String queueURL) throws MalformedMessageException {
-		Message message = SQSUtils.getMessage(queueURL, 20);
-
-		if (message == null){
-			return null;
-		}
-		return message;
+		return SQSUtils.getMessage(queueURL, 20);
 	}
 }
