@@ -33,7 +33,7 @@ public class SqsLooper implements Runnable {
                 Thread.sleep(DELAY_BETWEEN_TERMINATE_MESSAGE_AND_SHUTDOWN);
             }
             catch (InterruptedException e) {
-                e.printStackTrace();
+                log.warn(e);
             }
         }
         env.executor.shutdownNow();
@@ -60,8 +60,7 @@ public class SqsLooper implements Runnable {
                 Thread.sleep(SQS_LOOP_SLEEP_DURATION_MILLIS);
             }
             catch (InterruptedException e) {
-                log.info("looper interrupted: ",e);
-                e.printStackTrace();
+                log.warn("looper interrupted: ",e);
             }
         } while(true);
         finish();
@@ -81,10 +80,8 @@ public class SqsLooper implements Runnable {
         try (PrintWriter writer = new PrintWriter(env.outputFileName, "UTF-8")) {
             writer.println(html);
             writer.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            log.error(e);
         }
     }
 

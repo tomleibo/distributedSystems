@@ -30,7 +30,11 @@ public class LocalMachine implements Runnable{
         getQueueUrlOrCreateIfNotExists();
         sendMessageToManager();
         if (!isManagerNodeActive()) {
+            log.info("Manager is not active. Stating the manager");
             startManager();
+        }
+        else {
+            log.info("Using an already active manager");
         }
         startHeartBit();
         createSqsLooper();
@@ -71,7 +75,7 @@ public class LocalMachine implements Runnable{
                 break;
             }
         }
-        if (bucket ==null) {
+        if (bucket == null) {
             bucket=S3Utils.createBucket(bucketName);
         }
         return bucket;
@@ -103,7 +107,6 @@ public class LocalMachine implements Runnable{
     public  boolean isManagerNodeActive() {
         Instance ins  = EC2Utils.getManagerInstance();
         if (ins==null) {
-            log.warn("manager is not active. activating... ");
             return false;
         }
         return true;
@@ -130,7 +133,12 @@ public class LocalMachine implements Runnable{
                 log.info("heartbit started.");
                 while (true) {
                     if (!isManagerNodeActive()) {
-                        startManager();
+                        log.info("Heartbeat waiting for the manager to become active");
+                        Thread.sleep(1000 * 120);
+                        if (!isManagerNodeActive()) {
+                            log.warn("Manager is not active for 2 minutes, heartbeat is activating the manager");
+                            startManager();
+                        }
                     }
                     Thread.sleep(SLEEP_CYCLE);
                 }
