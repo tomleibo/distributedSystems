@@ -228,9 +228,14 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		int numOfWorkers = getTotalNumOfRequiredWorkers(fileContent);
 		int currentNumOfWorkers = EC2Utils.countWorkers();
 		int workersToStart = numOfWorkers - currentNumOfWorkers;
-		logger.info(currentNumOfWorkers + " workers are running\n" +
-				"Starting " + workersToStart + " more workers for total of " + numOfWorkers + " workers.");
-		EC2Utils.startWorkers(workersToStart);
+		if (workersToStart <= 0){
+			logger.debug(currentNumOfWorkers + " are running. not starting any workers");
+		}
+		else {
+			logger.info(currentNumOfWorkers + " workers are running\n" +
+					"Starting " + workersToStart + " more workers for total of " + numOfWorkers + " workers.");
+			EC2Utils.startWorkers(workersToStart);
+		}
 	}
 
 	/**

@@ -8,6 +8,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.UUID;
 
 public class NewAnalyzeCommand implements ManagerToWorkerCommand {
@@ -70,7 +71,7 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 
     private Tweet processTweetFromTitle(String title) {
         System.out.println(title);
-        return null;
+		return new Tweet("dummy",new LinkedList<>(),2);// TODO implement
     }
 
     private void uploadTweetToQueue(Tweet tweet) {
