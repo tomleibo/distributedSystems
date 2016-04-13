@@ -69,7 +69,6 @@ public class SqsLooper implements Runnable {
     private void writeToFile(String html) {
         File file = new File(env.outputFileName);
         if (!file.exists()) {
-            file.mkdirs();
             try {
                 file.createNewFile();
             }

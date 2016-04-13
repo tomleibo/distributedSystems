@@ -163,15 +163,16 @@ public class S3Utils {
     public static File downloadFile(String bucketName, String key) throws IOException {
         File file = new File("aws-"+bucketName+"-"+key);
         file.setWritable(true);
-        InputStreamReader sreader = new InputStreamReader(getFileInputStream(bucketName, key));
-        BufferedReader breader = new BufferedReader(sreader);
-        try (FileWriter writer = new FileWriter(file)) {
-            while (true) {
-                String line = breader.readLine();
-                writer.write(line + System.getProperty("line.separator"));
-                if (line == null) break;
-            }
+        InputStream fileInputStream = getFileInputStream(bucketName, key);
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+        int read;
+        byte[] bytes = new byte[1024];
+
+        while ((read = fileInputStream.read(bytes)) != -1) {
+            fileOutputStream.write(bytes, 0, read);
         }
+
         return file;
     }
 
