@@ -1,11 +1,13 @@
 package com.bgu.dsp.manager;
 
+import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.awsUtils.Utils;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
+import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.ExecutorService;
@@ -35,9 +37,17 @@ public class Main {
 		SQSHandler sqsHandler = new SQSHandler();
 		while (true){
 			try {
-				LocalToManagerCommand commandFromQueue = sqsHandler.getCommandFromQueue(localToManagerQueueUrl);
-				if (commandFromQueue != null) {
-					executor.execute(commandFromQueue);
+				Message messageFromQueue = sqsHandler.getCommandFromQueue(localToManagerQueueUrl);
+				LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
+				if (messageFromQueue != null) {
+					executor.execute(
+							new Runnable() {
+								@Override
+								public void run() {
+									commandFromQueue.run();
+									SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
+								}
+							});
 					if (commandFromQueue.shouldTerminate()) {
 						break;
 					}

@@ -23,17 +23,18 @@ public class Worker implements Runnable{
 
     public void run() {
         while (true) {
-            String msg = getSqsMessageFromQueue();
-            ManagerToWorkerCommand cmd=null;
-            try {
-                cmd = ManagerToWorkersSQSProtocol.parse(msg);
-            }
-            catch (MalformedMessageException e) {
-                malformedMessage(e);
-                throw new RuntimeException("failed to parse message", e);
-            }
-            if (cmd != null) {
-                cmd.execute();
+            Message msg = getSqsMessageFromQueue();
+            if (msg != null) {
+                ManagerToWorkerCommand cmd = null;
+                try {
+                    cmd = ManagerToWorkersSQSProtocol.parse(msg.getBody());
+                } catch (MalformedMessageException e) {
+                    log.error("failed to parse message", e);
+                }
+                if (cmd != null) {
+                    cmd.execute();
+                    SQSUtils.deleteMessage(inQueueUrl, msg);
+                }
             }
         }
     }
@@ -42,15 +43,8 @@ public class Worker implements Runnable{
 	/**
      * @return msg body if found a message in the queue or null if couldn't find a message in the queue
      */
-    private String getSqsMessageFromQueue() {
-        Message msg = SQSUtils.getMessage(inQueueUrl, 20);
-        if (msg == null){
-            return null;
-        }
-        return msg.getBody();
+    private Message getSqsMessageFromQueue() {
+        return SQSUtils.getMessage(inQueueUrl, 20);
     }
 
-    private void malformedMessage(MalformedMessageException e) {
-
-    }
 }
