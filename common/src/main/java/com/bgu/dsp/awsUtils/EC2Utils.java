@@ -123,6 +123,9 @@ public class EC2Utils {
      * @see #startWorkersAndWait
      */
     public static List<String> startWorkers(int n){
+        if (n < 0){
+            throw new IllegalArgumentException("n must be >= 0. got n=" + n);
+        }
         if (n == 0){
             // Can't send an empty RunInstanceRequest
             return new LinkedList<>();
