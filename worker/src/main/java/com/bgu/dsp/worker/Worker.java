@@ -32,7 +32,9 @@ public class Worker implements Runnable{
                 malformedMessage(e);
                 throw new RuntimeException("failed to parse message", e);
             }
-            cmd.execute();
+            if (cmd != null) {
+                cmd.execute();
+            }
         }
     }
 
@@ -41,7 +43,7 @@ public class Worker implements Runnable{
      * @return msg body if found a message in the queue or null if couldn't find a message in the queue
      */
     private String getSqsMessageFromQueue() {
-        Message msg = SQSUtils.getMessage(inQueueUrl);
+        Message msg = SQSUtils.getMessage(inQueueUrl, 20);
         if (msg == null){
             return null;
         }
