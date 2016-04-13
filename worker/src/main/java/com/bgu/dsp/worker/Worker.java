@@ -37,8 +37,14 @@ public class Worker implements Runnable{
     }
 
 
+	/**
+     * @return msg body if found a message in the queue or null if couldn't find a message in the queue
+     */
     private String getSqsMessageFromQueue() {
         Message msg = SQSUtils.getMessage(inQueueUrl);
+        if (msg == null){
+            return null;
+        }
         return msg.getBody();
     }
 
