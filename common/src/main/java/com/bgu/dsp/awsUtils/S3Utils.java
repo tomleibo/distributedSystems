@@ -161,10 +161,10 @@ public class S3Utils {
      * @throws IOException
      */
     public static File downloadFile(String bucketName, String key) throws IOException {
-        File file = new File("aws-"+bucketName+"-"+key);
-        file.setWritable(true);
+        File tmpTweetFile = new File("aws-"+bucketName+"-"+key);
+        tmpTweetFile.setWritable(true);
         InputStream fileInputStream = getFileInputStream(bucketName, key);
-        FileOutputStream fileOutputStream = new FileOutputStream(file);
+        FileOutputStream fileOutputStream = new FileOutputStream(tmpTweetFile);
 
         int read;
         byte[] bytes = new byte[1024];
@@ -173,7 +173,7 @@ public class S3Utils {
             fileOutputStream.write(bytes, 0, read);
         }
 
-        return file;
+        return tmpTweetFile;
     }
 
     /**
