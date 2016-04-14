@@ -85,10 +85,9 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	public void run() {
 		String workersToManagerQueueName = null;
 		try {
-			String fileContent = getFileContent();
 			startWorkers();
 			workersToManagerQueueName = createQueue();
-			List<UUID> uuids = postTweetsToQueue(fileContent, workersToManagerQueueName);
+			List<UUID> uuids = postTweetsToQueue(workersToManagerQueueName);
 			List<Tweet> replies = waitForAllReplies(workersToManagerQueueName, uuids);
 			publishResultsToS3(replies);
 			replyToLocal();
@@ -169,41 +168,33 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		return answers;
 	}
 
-	private void sleep(int millis) {
-		try {
-			Thread.sleep(millis);
-		} catch (InterruptedException e) {
-			logger.warn(e);
-		}
-	}
-
 	/**
 	 * Post the file content to the queue for workers to consume.
-	 * @param fileContent
-	 * @param workersToManagerQueueName
 	 * @return a list of UUIDs of the messages that were posted to the queue
 	 * @throws IOException if failed to read the file
 	 */
-	private List<UUID> postTweetsToQueue(String fileContent, String workersToManagerQueueName) throws IOException {
+	private List<UUID> postTweetsToQueue(String workersToManagerQueueName) throws IOException {
 
 		String managerToWorkersQueueUrl = SQSUtils.getQueueUrlByName(MANAGER_TO_WORKERS_QUEUE_NAME);
 
-		BufferedReader bufReader = new BufferedReader(new StringReader(fileContent));
 
 		List<UUID> uuids = new LinkedList<>();
 		String line;
 
-		while( (line = bufReader.readLine()) != null ) {
-			UUID uuid = UUID.randomUUID();
+		File file = S3Utils.downloadFile(bucketName, key);
 
-			String msg = ManagerToWorkersSQSProtocol.newAnalyzeMessage(new NewAnalyzeCommand(uuid, workersToManagerQueueName, line));
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+			while ((line = br.readLine()) != null) {
+				UUID uuid = UUID.randomUUID();
 
-			SQSUtils.sendMessage(managerToWorkersQueueUrl, msg);
-			uuids.add(uuid);
+				String msg = ManagerToWorkersSQSProtocol.newAnalyzeMessage(new NewAnalyzeCommand(uuid, workersToManagerQueueName, line));
+
+				SQSUtils.sendMessage(managerToWorkersQueueUrl, msg);
+				uuids.add(uuid);
+			}
 		}
 
 		return uuids;
-
 	}
 
 	/**
@@ -254,24 +245,16 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		return (int)Math.ceil(numberOfLines / (double)tasksPerWorker);
 	}
 
-	private String getFileContent() throws IOException {
-		// TODO what if the file is larger then the memory? can we save it in chunks?
-		InputStream fileInputStream = S3Utils.getFileInputStream(bucketName, key);
-		try {
-			return IOUtils.toString(fileInputStream);
-		} catch (IOException e) {
-			throw new IOException("Failed to read file from S3", e);
-		}
-	}
-
 	private int countLines() throws IOException {
-		String fileContent = getFileContent();
-		Matcher m = Pattern.compile("\r\n|\r|\n").matcher(fileContent);
-		int lines = 1;
-		while (m.find()) {
-			lines ++;
+		File file = S3Utils.downloadFile(bucketName, key);
+		int numberOfLines = 0;
+
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+			while (br.readLine() != null) {
+				numberOfLines++;
+			}
 		}
-		return lines;
+		return numberOfLines;
 	}
 
 	@Override
