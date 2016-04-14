@@ -23,7 +23,8 @@ public class SqsLooper implements Runnable {
     }
 
     private void finish() {
-        log.info("finishing...");
+        log.info("deleting queue and shutting down .");
+        SQSUtils.deleteQueue(env.inQueueUrl);
         env.executor.shutdownNow();
     }
 

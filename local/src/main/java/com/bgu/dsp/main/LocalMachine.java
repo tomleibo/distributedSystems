@@ -8,14 +8,10 @@ import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
 
 import java.io.File;
 import java.util.UUID;
 
-/**
- * Created by thinkPAD on 4/10/2016.
- */
 public class LocalMachine implements Runnable{
     final static Logger log = Logger.getLogger(LocalMachine.class);
     LocalEnv env;
@@ -41,9 +37,7 @@ public class LocalMachine implements Runnable{
     }
 
     private  void startHeartBit() {
-        env.executor.execute(new HeartBit() {
-
-        });
+        env.executor.execute(new HeartBit() { });
     }
 
 
