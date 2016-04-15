@@ -8,7 +8,7 @@ First of all define your credentials as explained in [AWS documentation](http://
 ## Local credentials
 - In production, machines that are started on EC2 are using `InstanceProfileCredentials`.
 If you are running the manager/workers locally, you will need to use regular credentials.
-To do so, add the environment variable `DSP_MODE=DEV`. Note that this collides with the [Mocks](Mocks)
+To do so, add the environment variable `DSP_MODE=DEV`. Note that this collides with the [Mocks](#mocks)
 
 ### Mocks
 - We use [fake_sqs](https://github.com/iain/fake_sqs) to mock AWS SQS,
