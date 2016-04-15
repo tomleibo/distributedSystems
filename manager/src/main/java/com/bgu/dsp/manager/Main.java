@@ -5,6 +5,7 @@ import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.awsUtils.Utils;
+import com.bgu.dsp.common.MessageKeepAlive;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
@@ -58,6 +59,10 @@ public class Main {
 
 				if (messageFromQueue!= null) {
 
+					// Make sure that no one else is taking the message as long as this manager is working on it
+					Thread messageKeepAlive = new Thread(new MessageKeepAlive(messageFromQueue, localToManagerQueueUrl, 30));
+					messageKeepAlive.start();
+
 					LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
 
 					setExpectedNumberOfWorkers(commandFromQueue.getTotalNumOfRequiredWorkers());
@@ -65,6 +70,7 @@ public class Main {
 					executor.execute(
 							() -> {
 								commandFromQueue.run();
+								messageKeepAlive.interrupt();
 								SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
 							});
 					if (commandFromQueue.shouldTerminate()) {
