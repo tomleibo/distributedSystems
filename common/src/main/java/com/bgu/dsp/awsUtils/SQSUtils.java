@@ -66,6 +66,15 @@ public class SQSUtils {
         return sqs.listQueues();
     }
 
+    public static void extendMessageVisibilityTimeout(Message msg, String queueUrl, Integer newVisibilityTimeout) {
+        ChangeMessageVisibilityRequest changeMessageVisibilityRequest = new ChangeMessageVisibilityRequest(
+                queueUrl,
+                msg.getReceiptHandle(),
+                newVisibilityTimeout
+        );
+        sqs.changeMessageVisibility(changeMessageVisibilityRequest);
+    }
+
     public static String createQueue(String queueName) {
         CreateQueueRequest createQueueRequest = new CreateQueueRequest(queueName);
         return sqs.createQueue(createQueueRequest).getQueueUrl();
