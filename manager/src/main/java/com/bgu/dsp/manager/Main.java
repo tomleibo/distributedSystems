@@ -55,11 +55,13 @@ public class Main {
 		while (true){
 			try {
 				Message messageFromQueue = sqsHandler.getCommandFromQueue(localToManagerQueueUrl);
-				LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
 
-				setExpectedNumberOfWorkers(commandFromQueue.getTotalNumOfRequiredWorkers());
+				if (messageFromQueue!= null) {
 
-				if (commandFromQueue != null) {
+					LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
+
+					setExpectedNumberOfWorkers(commandFromQueue.getTotalNumOfRequiredWorkers());
+
 					executor.execute(
 							() -> {
 								commandFromQueue.run();
