@@ -146,7 +146,7 @@ public class TweetsToHtmlConverter {
             }
         }
         try  {
-            FileWriter fw = new FileWriter("outfilename", true);
+            FileWriter fw = new FileWriter(outputFileName, true);
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw);
             return out;
