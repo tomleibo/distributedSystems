@@ -32,7 +32,7 @@ public class EC2Utils {
         ec2 = new AmazonEC2Client(credentials);
         ec2.setRegion(Utils.region);
 
-        if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_EC2"))){
+        if ("DEV-LOCAL".equals(System.getenv("DSP_MODE")) || "DEV-LOCAL".equals(System.getenv("DSP_MODE_EC2"))){
             final String URL = "http://localhost:8000/aws-mock/ec2-endpoint/";
             ec2.setEndpoint(URL);
             logger.info("Using development EC2 with url " + URL);
