@@ -28,3 +28,8 @@ are possible in AWS
 
 ### Logging
 - configure logging in `main/java/resources/log4j.properties`
+
+### maven
+We use maven profiles, the `dev` profile is active by default and includes aws jars.
+The `production` profile is activated when we build the production jars, this way we keep our production jars
+small, and add the aws jar (over 45 MB) in runtime
