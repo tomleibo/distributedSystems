@@ -28,6 +28,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
+            <scope>provided</scope>
             <version>1.10.64</version>
         </dependency>
         <dependency>

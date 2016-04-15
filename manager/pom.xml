@@ -34,7 +34,34 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>production</id>
+            <properties>
+                <aws-java-sdk-scope>provided</aws-java-sdk-scope>
+            </properties>
+
+        </profile>
+
+        <profile>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <id>dev</id>
+            <properties>
+                <aws-java-sdk-scope>compile</aws-java-sdk-scope>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencies>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk</artifactId>
+            <version>1.10.64</version>
+            <scope>${aws-java-sdk-scope}</scope>
+        </dependency>
 
         <dependency>
             <groupId>com.jcabi</groupId>
@@ -42,11 +69,6 @@
             <version>0.15</version>
         </dependency>
 
-        <dependency>
-            <groupId>dsp</groupId>
-            <artifactId>common</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
