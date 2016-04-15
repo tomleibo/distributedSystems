@@ -5,6 +5,11 @@ First of all define your credentials as explained in [AWS documentation](http://
 - Download the jars listed in the [worker readme](worker/jars/README.md)
 
 ## Dev environment
+## Local credentials
+- In production, machines that are started on EC2 are using `InstanceProfileCredentials`.
+If you are running the manager/workers locally, you will need to use regular credentials.
+To do so, add the environment variable `DSP_MODE=DEV`. Note that this collides with the [Mocks](Mocks)
+
 ### Mocks
 - We use [fake_sqs](https://github.com/iain/fake_sqs) to mock AWS SQS,
 follow the instruction in the repo to install
@@ -16,8 +21,8 @@ follow the instruction in the repo to install
 follow the instruction in the repo to install.
 *We currently use a fork because the original repo doesn't have the `InstanceType`s that are using.*
 - To use the mocks instead of using AWS, add an environment variable
-`DSP_MODE` with the value `DEV`.
-If you want to enable only specific mock, use `DSP_MODE_<service-name>=DEV`. For example `DSP_MODE_EC2=DEV`.
+`DSP_MODE` with the value `DEV-LOCAL`.
+If you want to enable only specific mock, use `DSP_MODE_<service-name>=DEV-LOCAL`. For example `DSP_MODE_EC2=DEV-LOCAL`.
 **Note** that the mocks support a subset of the actual actions that
 are possible in AWS
 

@@ -96,17 +96,23 @@ public class SQSUtils {
 
 
     public static void init() {
-        sqs = new AmazonSQSClient(new InstanceProfileCredentialsProvider());
-        if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_SQS"))){
-            //TODO is this neccessary on local mock mode?
-            AWSCredentials credentials = Utils.getAwsCredentials();
-            sqs = new AmazonSQSClient(credentials);
-            sqs.setRegion(Utils.region);
+        if ("DEV-LOCAL".equals(System.getenv("DSP_MODE")) || "DEV-LOCAL".equals(System.getenv("DSP_MODE_SQS"))){
             String host = "localhost";
             int port = 4568;
             String URL = "http://" + host + ":" + port;
             logger.info("Using development SQS with url " + URL);
             sqs.setEndpoint(URL);
+        }
+        else if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_SQS"))) {
+            logger.info("Using production SQS with local credentials");
+            AWSCredentials credentials = Utils.getAwsCredentials();
+            sqs = new AmazonSQSClient(credentials);
+            sqs.setRegion(Utils.region);
+        }
+        else {
+            logger.info("Using production SQS");
+            // TODO shouldn't we set region?
+            sqs = new AmazonSQSClient(new InstanceProfileCredentialsProvider());
         }
     }
 

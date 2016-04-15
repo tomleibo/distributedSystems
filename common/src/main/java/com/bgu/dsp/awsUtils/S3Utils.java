@@ -27,10 +27,8 @@ public class S3Utils {
     }
 
     public static void init() {
-        s3 = new AmazonS3Client(new InstanceProfileCredentialsProvider());
 
-        if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_S3"))){
-            //TODO is this neccessary on local mock mode?
+        if ("DEV-LOCAL".equals(System.getenv("DSP_MODE")) || "DEV-LOCAL".equals(System.getenv("DSP_MODE_S3"))) {
             AWSCredentials credentials = Utils.getAwsCredentials();
             s3 = new AmazonS3Client(credentials);
             s3.setRegion(Utils.region);
@@ -42,7 +40,19 @@ public class S3Utils {
             s3.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
             logger.info("Using development S3 with url " + URL);
         }
+        else if ("DEV".equals(System.getenv("DSP_MODE")) || "DEV".equals(System.getenv("DSP_MODE_S3"))) {
+            logger.info("Using production S3 with local credentials");
+            AWSCredentials credentials = Utils.getAwsCredentials();
+            s3 = new AmazonS3Client(credentials);
+            s3.setRegion(Utils.region);
+        }
+        else {
+            logger.info("Using production S3");
+            // TODO shouldn't we set region?
+            s3 = new AmazonS3Client(new InstanceProfileCredentialsProvider());
+        }
     }
+
 
     /**
      *
