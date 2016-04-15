@@ -44,7 +44,10 @@ public class Main {
 		// This queue should be already created by the local
 		String localToManagerQueueUrl = SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
 
-		String managerToWorkersQueueUrl = SQSUtils.createQueue(MANAGER_TO_WORKERS_QUEUE_NAME);
+		SQSUtils.createQueue(MANAGER_TO_WORKERS_QUEUE_NAME);
+
+		Thread workersMonitor = new Thread(new WorkersMonitor());
+		workersMonitor.start();
 
 		ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -73,6 +76,9 @@ public class Main {
 
 		logger.info("Shutting down executor, waiting for all tasks to be completed");
 		waitForAllTasks(executor);
+
+		logger.info("Shutting down workers monitor");
+		workersMonitor.interrupt();
 
 		logger.info("Manager is now shutting down all the workers");
 		EC2Utils.terminateAllWorkers();
