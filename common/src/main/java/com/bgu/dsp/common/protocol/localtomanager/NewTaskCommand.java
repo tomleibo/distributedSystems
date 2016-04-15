@@ -145,6 +145,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		while (numberOfReplies < numberOfTweets){
 			Message rawMessage =  SQSUtils.getMessage(workersToManagerQueueUrl, timeoutSeconds);
 			if (rawMessage != null) {
+				SQSUtils.deleteMessage(workersToManagerQueueUrl, rawMessage);
 				logger.debug("Got message " + rawMessage);
 				Tweet tweet = WorkerToManagerSQSProtocol.parse(rawMessage.getBody());
 				twitsWriter.write(tweet);
