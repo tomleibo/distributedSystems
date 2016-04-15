@@ -6,6 +6,7 @@ import com.bgu.dsp.awsUtils.Utils;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.bgu.dsp.common.protocol.managertoworker.ManagerToWorkerCommand;
 import com.bgu.dsp.common.protocol.managertoworker.ManagerToWorkersSQSProtocol;
+import com.bgu.dsp.worker.parser.NLPParser;
 import org.apache.log4j.Logger;
 
 public class Worker implements Runnable{
@@ -21,6 +22,7 @@ public class Worker implements Runnable{
         inQueueUrl = SQSUtils.getQueueUrlByName(Utils.MANAGER_TO_WORKERS_QUEUE_NAME);
     }
 
+    @Override
     public void run() {
         while (true) {
             Message msg = getSqsMessageFromQueue();
@@ -32,7 +34,7 @@ public class Worker implements Runnable{
                     log.error("failed to parse message", e);
                 }
                 if (cmd != null) {
-                    cmd.execute();
+                    cmd.execute( new NLPParser());
                     SQSUtils.deleteMessage(inQueueUrl, msg);
                 }
             }

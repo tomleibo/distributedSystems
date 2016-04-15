@@ -1,11 +1,11 @@
-package com.bgu.dsp.worker.parser; /**
- * Created by hagai_lvi on 12/04/2016.
- */
+package com.bgu.dsp.worker.parser;
 import java.util.*;
 
 import java.util.List;
 import java.util.Properties;
 
+import com.bgu.dsp.common.protocol.managertolocal.Tweet;
+import com.bgu.dsp.common.protocol.managertoworker.TweetAnalyzer;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
@@ -18,7 +18,7 @@ import edu.stanford.nlp.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
-public class NLPParser {
+public class NLPParser implements TweetAnalyzer{
 
 static {
 		init();
@@ -99,5 +99,14 @@ static {
 
 		return res;
 
+	}
+
+	@Override
+	public Tweet analyze(String tweet) {
+		int sentiment = getSentiment(tweet);
+		LinkedList<String> entities = new LinkedList<>(getEntities(tweet));
+		return new Tweet(tweet,
+				entities,
+				sentiment);
 	}
 }

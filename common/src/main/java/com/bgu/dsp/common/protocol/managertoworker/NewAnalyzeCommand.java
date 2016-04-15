@@ -49,9 +49,9 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 	}
 
 	@Override
-	public void execute() {
+	public void execute(TweetAnalyzer analyzer) {
         String title= getTitleFromUrl();
-        Tweet tweet = processTweetFromTitle(title);
+        Tweet tweet = analyzer.analyze(title);
         uploadTweetToQueue(tweet);
 	}
 
