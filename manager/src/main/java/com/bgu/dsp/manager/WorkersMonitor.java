@@ -24,8 +24,7 @@ public class WorkersMonitor implements Runnable{
 				try {
 					Thread.sleep(WAIT_FOR_WORKERS * 1000);
 				} catch (InterruptedException e) {
-					String message = this.getClass().getSimpleName() + "Interrupted, Exiting";
-					logger.info(message, e);
+					logger.info(interuptedMessage);
 					break;
 				}
 				workers = EC2Utils.countWorkers();
@@ -40,7 +39,7 @@ public class WorkersMonitor implements Runnable{
 			try {
 				Thread.sleep(1000 * CYCLE_TIME);
 			} catch (InterruptedException e) {
-				logger.info(interuptedMessage, e);
+				logger.info(interuptedMessage);
 				break;
 			}
 		}
