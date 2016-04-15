@@ -126,11 +126,6 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		S3Utils.uploadFile(Utils.MANAGER_TO_LOCAL_BUCKET_NAME, resFilekey, resFile);
 		double time = (System.currentTimeMillis() - start) / 1000.0;
 		logger.debug("Upload took " + time + " seconds" );
-
-		if (! resFile.delete()){
-			logger.warn("Manager could not delete results file after uploading it to S3.\n" +
-					"File path is " + resFile.getAbsolutePath() );
-		}
 	}
 
 	/**
@@ -164,6 +159,17 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		twitsWriter.close();
 
 		publishResultsToS3(resFilekey);
+
+		deleteLocalResultsFile(resFilekey);
+
+	}
+
+	private void deleteLocalResultsFile(String resFilekey) {
+		File resFile = new File(resFilekey);
+		if (!resFile.delete()){
+			logger.warn("Manager could not delete results file after uploading it to S3.\n" +
+					"File path is " + resFile.getAbsolutePath() );
+		}
 	}
 
 	/**
@@ -190,6 +196,8 @@ public class NewTaskCommand implements LocalToManagerCommand {
 				numberOfTweets++;
 			}
 		}
+
+		file.delete();
 
 		return numberOfTweets;
 	}
@@ -251,6 +259,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 				numberOfLines++;
 			}
 		}
+		file.delete();
 		return numberOfLines;
 	}
 
