@@ -17,6 +17,12 @@ public class Utils {
     public static final String MANAGER_INSTANCE_NAME = "manager";
     public static final String MANAGER_SECURITY_GROUP = "manager_security_group";
     public static final InstanceType WORKER_INSTANCE_TYPE = InstanceType.T2Micro;
+
+	/**
+	 * This can be a relatively large number as it only represents the number of tasks that were
+     * acquired from the queue, and not the number of tasks that are actually running
+     */
+    public static final int NUM_OF_MANAGER_TASKS = 500;
     public static Region region = Region.getRegion(Regions.US_EAST_1);
 
 	/**

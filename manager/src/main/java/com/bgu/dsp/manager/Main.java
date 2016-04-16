@@ -11,9 +11,7 @@ import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 import org.apache.log4j.Logger;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static com.bgu.dsp.awsUtils.Utils.LOCAL_TO_MANAGER_QUEUE_NAME;
 import static com.bgu.dsp.awsUtils.Utils.MANAGER_TO_WORKERS_QUEUE_NAME;
@@ -41,6 +39,9 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		// The semaphore doesn't need to be fair because only one thread is using it
+		Semaphore tasks = new Semaphore(Utils.NUM_OF_MANAGER_TASKS, false);
+
 		S3Utils.createBucket(Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
 		logger.warn("Manager created bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME + " and will not delete it.\n" +
 				"This bucket is meant to save results and deliver them to the local application.");
@@ -53,7 +54,6 @@ public class Main {
 		workersMonitor.start();
 
 		ExecutorService executor = Executors.newCachedThreadPool();
-
 		SQSHandler sqsHandler = new SQSHandler();
 		while (true){
 			try {
@@ -65,6 +65,8 @@ public class Main {
 					Thread messageKeepAlive = new Thread(new MessageKeepAlive(messageFromQueue, localToManagerQueueUrl, 30));
 					messageKeepAlive.start();
 
+					tasks.acquireUninterruptibly();
+
 					LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
 
 					commandFromQueue.addWorkerStatisticsHandler(workersStatistics);
@@ -75,6 +77,7 @@ public class Main {
 								commandFromQueue.run();
 								messageKeepAlive.interrupt();
 								SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
+								tasks.release();
 							});
 					if (commandFromQueue.shouldTerminate()) {
 						break;
