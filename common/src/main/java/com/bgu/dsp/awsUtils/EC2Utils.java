@@ -248,7 +248,7 @@ public class EC2Utils {
         ArrayList<String> lines = new ArrayList<>();
         lines.add("#! /bin/bash");
         lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-manager-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/manager.jar");
-        lines.add("java -jar manager.jar");
+        lines.add("java -cp \"manager.jar:aws-java-sdk-1.10.64/*\" com.bgu.dsp.manager.Main > manager_stdout_stderr.log 2>&1");
         String str = new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
         return str;
     }
@@ -256,8 +256,8 @@ public class EC2Utils {
     private static String getWorkerUserDataScript(){
         ArrayList<String> lines = new ArrayList<>();
         lines.add("#! /bin/bash");
-        lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-manager-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/worker.jar");
-        lines.add("java -jar worker.jar");
+        lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-worker-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/worker.jar");
+        lines.add("java -cp \"worker.jar:aws-java-sdk-1.10.64/*\" com.bgu.dsp.worker.Worker > worker_stdout_stderr.log 2>&1");
         String str = new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
         return str;
     }

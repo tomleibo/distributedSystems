@@ -19,6 +19,27 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>production</id>
+            <properties>
+                <aws-java-sdk-scope>provided</aws-java-sdk-scope>
+            </properties>
+
+        </profile>
+
+        <profile>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <id>dev</id>
+            <properties>
+                <aws-java-sdk-scope>compile</aws-java-sdk-scope>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>log4j</groupId>
@@ -28,7 +49,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
-            <scope>provided</scope>
+            <scope>${aws-java-sdk-scope}</scope>
             <version>1.10.64</version>
         </dependency>
         <dependency>
