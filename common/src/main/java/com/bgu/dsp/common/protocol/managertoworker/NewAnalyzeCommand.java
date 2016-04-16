@@ -54,7 +54,7 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 		try {
 			String title= getTitleFromUrl();
 			tweet = analyzer.analyze(title);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.warn("Got an errornous tweet url " + getTweetUrl(), e);
 			tweet = new Tweet(e.getMessage());
 		}
