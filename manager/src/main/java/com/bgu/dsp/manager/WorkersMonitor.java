@@ -1,5 +1,6 @@
 package com.bgu.dsp.manager;
 
+import com.amazonaws.AbortedException;
 import com.bgu.dsp.awsUtils.EC2Utils;
 import org.apache.log4j.Logger;
 
@@ -16,7 +17,13 @@ public class WorkersMonitor implements Runnable{
 		String interuptedMessage = this.getClass().getSimpleName() + "Interrupted, Exiting";
 
 		while (true) {
-			int workers = EC2Utils.countWorkers();
+			int workers;
+			try {
+				workers = EC2Utils.countWorkers();
+			}catch (AbortedException e){
+				logger.info(interuptedMessage, e);
+				break;
+			}
 			int expectedNumberOfWorkers = Main.getExpectedNumberOfWorkers();
 			if (workers < expectedNumberOfWorkers) {
 				logger.info("Expected " + expectedNumberOfWorkers + ", but found " + workers + " workers.\n" +
@@ -27,7 +34,12 @@ public class WorkersMonitor implements Runnable{
 					logger.info(interuptedMessage);
 					break;
 				}
-				workers = EC2Utils.countWorkers();
+				try {
+					workers = EC2Utils.countWorkers();
+				}catch (AbortedException e){
+					logger.info(interuptedMessage, e);
+					break;
+				}
 				if (workers < expectedNumberOfWorkers) {
 					int workersToStart = expectedNumberOfWorkers - workers;
 					logger.warn("Missing workers, expected " + expectedNumberOfWorkers + " but got only " + workers + " workers.\n" +
