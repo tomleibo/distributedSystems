@@ -33,3 +33,6 @@ are possible in AWS
 We use maven profiles, the `dev` profile is active by default and includes aws jars.
 The `production` profile is activated when we build the production jars, this way we keep our production jars
 small, and add the aws jar (over 45 MB) in runtime
+When creating the jars with the `production` maven profile, all the jars that are contained in the aws sdk are expected
+to be found on the computer that runs the jar, under `aws-java-sdk-1.10.64` directory. For more detailes see
+`getManagerUserDataScript()` or `getWorkerUserDataScript()` in `EC2Utils.java`.
