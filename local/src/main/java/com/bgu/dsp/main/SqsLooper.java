@@ -27,8 +27,9 @@ public class SqsLooper implements Runnable {
     public void run() {
         log.info("starting sqs looper");
         do {
-            Message msg = SQSUtils.getMessage(env.inQueueUrl);
+            Message msg = SQSUtils.getMessage(env.inQueueUrl, 20);
             if (msg!=null) {
+                SQSUtils.deleteMessage(env.inQueueUrl, msg);
                 try {
                     TweetsToHtmlConverter converter =ManagerToLocalSqsProtocol.parse(msg.getBody());
                     converter.execute(env.outputFileName);
