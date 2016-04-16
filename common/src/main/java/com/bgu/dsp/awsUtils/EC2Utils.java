@@ -48,10 +48,8 @@ public class EC2Utils {
         DescribeInstancesResult describeInstancesResult = getAllWorkers();
         for (Reservation reservation : describeInstancesResult.getReservations()) {
             for (Instance instance : reservation.getInstances()) {
-                System.out.println(instance);
                 if (instance.getState().getCode() == STATE_CODE_PENDING ||
                         instance.getState().getCode() == STATE_CODE_RUNNING){
-                    System.out.println(instance.getTags());
                     instanceCount++;
                 }
             }

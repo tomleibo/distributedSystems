@@ -148,7 +148,6 @@ public class S3Utils {
      */
     public static InputStream getFileInputStream(String bucketName,String key) {
         S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
-        //System.out.println("Content-Type: "  + object.getObjectMetadata().getContentType());
         return object.getObjectContent();
     }
 
