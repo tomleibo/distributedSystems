@@ -1,6 +1,11 @@
 package com.bgu.dsp.common.protocol.localtomanager;
 
+import com.bgu.dsp.common.WorkersStatisticsI;
+
 public interface LocalToManagerCommand extends Runnable {
+
+	void addWorkerStatisticsHandler(WorkersStatisticsI workersStatisticsI);
+
 
 	int getTotalNumOfRequiredWorkers();
 

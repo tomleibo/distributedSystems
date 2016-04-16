@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.LinkedList;
+import java.util.UUID;
 
 /**
  * Serialize and instances of {@link com.bgu.dsp.common.protocol.managertolocal.Tweet} to a file <br>
@@ -50,7 +51,7 @@ public class TwitsWriter {
 		for (int i = 0; i < n_objects; i++){
 			LinkedList<String> entities = new LinkedList<>();
 			entities.add("entity " + i);
-			twitsWriter.write(new Tweet("tweeet" + i, entities,2 ));
+			twitsWriter.write(new Tweet("tweeet" + i, entities,2, UUID.randomUUID()));
 		}
 		twitsWriter.close();
 

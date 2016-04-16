@@ -21,6 +21,8 @@ import static com.bgu.dsp.awsUtils.Utils.MANAGER_TO_WORKERS_QUEUE_NAME;
 public class Main {
 	final static Logger logger = Logger.getLogger(Main.class);
 
+	private static WorkersStatistics workersStatistics = new WorkersStatistics();
+
 	private static Integer expectedNumberOfWorkers = 0;
 
 	public static int getExpectedNumberOfWorkers() {
@@ -65,6 +67,7 @@ public class Main {
 
 					LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
 
+					commandFromQueue.addWorkerStatisticsHandler(workersStatistics);
 					setExpectedNumberOfWorkers(commandFromQueue.getTotalNumOfRequiredWorkers());
 
 					executor.execute(
@@ -91,6 +94,7 @@ public class Main {
 		logger.info("Manager is now shutting down all the workers");
 		EC2Utils.terminateAllWorkers();
 
+		logger.info(workersStatistics.toString());
 		logger.info("All tasks completed. Manager is exiting");
 
 	}

@@ -10,9 +10,12 @@ import com.bgu.dsp.common.protocol.managertoworker.ManagerToWorkersSQSProtocol;
 import com.bgu.dsp.worker.parser.NLPParser;
 import org.apache.log4j.Logger;
 
+import java.util.UUID;
+
 public class Worker implements Runnable{
     final static Logger log = Logger.getLogger(Worker.class);
     private final String inQueueUrl;
+    private UUID uuid = UUID.randomUUID();
 
     public static void main(String args[]) {
         Worker worker = new Worker();
@@ -41,7 +44,7 @@ public class Worker implements Runnable{
                     log.error("failed to parse message", e);
                 }
                 if (cmd != null) {
-                    cmd.execute( new NLPParser());
+                    cmd.execute( new NLPParser(), this.uuid);
                     msgKeepAlive.interrupt();
                     SQSUtils.deleteMessage(inQueueUrl, msg);
                 }

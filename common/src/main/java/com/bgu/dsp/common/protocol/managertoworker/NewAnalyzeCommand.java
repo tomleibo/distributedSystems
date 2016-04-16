@@ -8,7 +8,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.UUID;
 
 public class NewAnalyzeCommand implements ManagerToWorkerCommand {
@@ -49,14 +48,14 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 	}
 
 	@Override
-	public void execute(TweetAnalyzer analyzer) {
+	public void execute(TweetAnalyzer analyzer, UUID workerUUID) {
 		Tweet tweet;
 		try {
 			String title= getTitleFromUrl();
-			tweet = analyzer.analyze(title);
+			tweet = analyzer.analyze(title, workerUUID);
 		} catch (Exception e) {
 			log.warn("Got an errornous tweet url " + getTweetUrl(), e);
-			tweet = new Tweet(e.getMessage());
+			tweet = new Tweet(e.getMessage(), workerUUID);
 		}
 		uploadTweetToQueue(tweet);
 	}

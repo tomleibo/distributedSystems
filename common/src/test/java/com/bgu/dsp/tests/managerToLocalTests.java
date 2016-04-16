@@ -15,6 +15,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,8 +23,8 @@ import static org.junit.Assert.assertEquals;
 public class managerToLocalTests {
     private List<Tweet> sampleTweetList() {
         List<Tweet> tweets = new ArrayList<>();
-        tweets.add(new Tweet("tweet tweet Tom Bash", Arrays.asList(new String[]{"Tom:NAME", "Bash:Location"}), 3));
-        tweets.add(new Tweet("3489034niu'\"$%#&$&^&%$@5wef948r4934b34f8h", Arrays.asList(new String[]{}), 2));
+        tweets.add(new Tweet("tweet tweet Tom Bash", Arrays.asList(new String[]{"Tom:NAME", "Bash:Location"}), 3, UUID.randomUUID()));
+        tweets.add(new Tweet("3489034niu'\"$%#&$&^&%$@5wef948r4934b34f8h", Arrays.asList(new String[]{}), 2, UUID.randomUUID()));
         return tweets;
     }
 

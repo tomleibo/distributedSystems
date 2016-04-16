@@ -2,6 +2,7 @@ package com.bgu.dsp.common.protocol.managertolocal;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by thinkPAD on 4/4/2016.
@@ -13,15 +14,18 @@ public class Tweet implements Serializable{
     List<String> entities;
     int sentiment;
     private String error;
+    private UUID workerUUID;
 
-    public Tweet(String tweet, List<String> entities, int sentiment) {
+    public Tweet(String tweet, List<String> entities, int sentiment, UUID workerUUID) {
         this.tweet = tweet;
         this.entities = entities;
         this.sentiment = sentiment;
+        this.workerUUID = workerUUID;
     }
 
-    public Tweet(String errorMessage){
+    public Tweet(String errorMessage, UUID workerUUID){
         this.error = errorMessage;
+        this.workerUUID = workerUUID;
     }
 
     public Tweet() {
@@ -61,7 +65,8 @@ public class Tweet implements Serializable{
         if (sentiment != tweet1.sentiment) return false;
         if (tweet != null ? !tweet.equals(tweet1.tweet) : tweet1.tweet != null) return false;
         if (entities != null ? !entities.equals(tweet1.entities) : tweet1.entities != null) return false;
-        return !(getError() != null ? !getError().equals(tweet1.getError()) : tweet1.getError() != null);
+        if (getError() != null ? !getError().equals(tweet1.getError()) : tweet1.getError() != null) return false;
+        return !(getWorkerUUID() != null ? !getWorkerUUID().equals(tweet1.getWorkerUUID()) : tweet1.getWorkerUUID() != null);
 
     }
 
@@ -71,6 +76,7 @@ public class Tweet implements Serializable{
         result = 31 * result + (entities != null ? entities.hashCode() : 0);
         result = 31 * result + sentiment;
         result = 31 * result + (getError() != null ? getError().hashCode() : 0);
+        result = 31 * result + (getWorkerUUID() != null ? getWorkerUUID().hashCode() : 0);
         return result;
     }
 
@@ -81,7 +87,16 @@ public class Tweet implements Serializable{
                 ", entities=" + entities +
                 ", sentiment=" + sentiment +
                 ", error='" + error + '\'' +
+                ", workerUUID=" + workerUUID +
                 '}';
+    }
+
+    public UUID getWorkerUUID() {
+        return workerUUID;
+    }
+
+    public void setWorkerUUID(UUID workerUUID) {
+        this.workerUUID = workerUUID;
     }
 }
 

@@ -5,6 +5,7 @@ import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.awsUtils.Utils;
+import com.bgu.dsp.common.WorkersStatisticsI;
 import com.bgu.dsp.common.protocol.managertolocal.ManagerToLocalSqsProtocol;
 import com.bgu.dsp.common.protocol.managertolocal.Tweet;
 import com.bgu.dsp.common.protocol.managertolocal.serialize.TwitsWriter;
@@ -34,6 +35,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	private final boolean terminate;
 	private final UUID taskID;
 	private final float tasksPerWorker;
+	private WorkersStatisticsI workerStatisticsHandler;
 
 	public String getSqsName() {
 		return sqsName;
@@ -149,8 +151,10 @@ public class NewTaskCommand implements LocalToManagerCommand {
 				logger.debug("Got message " + rawMessage);
 				Tweet tweet = WorkerToManagerSQSProtocol.parse(rawMessage.getBody());
 				if (tweet.getError() != null) {
+					workerStatisticsHandler.addFaultyTask(tweet.getWorkerUUID());
 					logger.info("Got a tweet with an error " + tweet.getError());
 				}else {
+					workerStatisticsHandler.addSuccessfulTask(tweet.getWorkerUUID());
 					twitsWriter.write(tweet);
 				}
 				numberOfReplies++;
@@ -238,6 +242,11 @@ public class NewTaskCommand implements LocalToManagerCommand {
 			EC2Utils.startWorkers(workersToStart);
 		}
 
+	}
+
+	@Override
+	public void addWorkerStatisticsHandler(WorkersStatisticsI workersStatistics) {
+		this.workerStatisticsHandler = workersStatistics;
 	}
 
 	/**

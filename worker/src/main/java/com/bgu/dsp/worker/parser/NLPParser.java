@@ -102,11 +102,11 @@ static {
 	}
 
 	@Override
-	public Tweet analyze(String tweet) {
+	public Tweet analyze(String tweet, UUID workerUUID) {
 		int sentiment = getSentiment(tweet);
 		LinkedList<String> entities = new LinkedList<>(getEntities(tweet));
 		return new Tweet(tweet,
 				entities,
-				sentiment);
+				sentiment, workerUUID);
 	}
 }
