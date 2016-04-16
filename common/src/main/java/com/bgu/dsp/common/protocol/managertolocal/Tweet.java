@@ -12,11 +12,16 @@ public class Tweet implements Serializable{
     String tweet;
     List<String> entities;
     int sentiment;
+    private String error;
 
     public Tweet(String tweet, List<String> entities, int sentiment) {
         this.tweet = tweet;
         this.entities = entities;
         this.sentiment = sentiment;
+    }
+
+    public Tweet(String errorMessage){
+        this.error = errorMessage;
     }
 
     public Tweet() {
@@ -38,6 +43,14 @@ public class Tweet implements Serializable{
         return this;
     }
 
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -46,16 +59,18 @@ public class Tweet implements Serializable{
         Tweet tweet1 = (Tweet) o;
 
         if (sentiment != tweet1.sentiment) return false;
-        if (!tweet.equals(tweet1.tweet)) return false;
-        return entities.equals(tweet1.entities);
+        if (tweet != null ? !tweet.equals(tweet1.tweet) : tweet1.tweet != null) return false;
+        if (entities != null ? !entities.equals(tweet1.entities) : tweet1.entities != null) return false;
+        return !(getError() != null ? !getError().equals(tweet1.getError()) : tweet1.getError() != null);
 
     }
 
     @Override
     public int hashCode() {
-        int result = tweet.hashCode();
-        result = 31 * result + entities.hashCode();
+        int result = tweet != null ? tweet.hashCode() : 0;
+        result = 31 * result + (entities != null ? entities.hashCode() : 0);
         result = 31 * result + sentiment;
+        result = 31 * result + (getError() != null ? getError().hashCode() : 0);
         return result;
     }
 
@@ -65,6 +80,7 @@ public class Tweet implements Serializable{
                 "tweet='" + tweet + '\'' +
                 ", entities=" + entities +
                 ", sentiment=" + sentiment +
+                ", error='" + error + '\'' +
                 '}';
     }
 }

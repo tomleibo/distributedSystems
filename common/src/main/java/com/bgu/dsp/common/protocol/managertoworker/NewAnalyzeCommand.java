@@ -50,28 +50,22 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 
 	@Override
 	public void execute(TweetAnalyzer analyzer) {
-        String title= getTitleFromUrl();
-        Tweet tweet = analyzer.analyze(title);
-        uploadTweetToQueue(tweet);
+		Tweet tweet;
+		try {
+			String title= getTitleFromUrl();
+			tweet = analyzer.analyze(title);
+		} catch (IOException e) {
+			log.warn("Got an errornous tweet url " + getTweetUrl(), e);
+			tweet = new Tweet(e.getMessage());
+		}
+		uploadTweetToQueue(tweet);
 	}
 
 
-    private String getTitleFromUrl() {
-        Document doc;
-        try {
-            doc = Jsoup.connect(tweetUrl).get();
-            String title = doc.title();
-            return title;
-        }
-        catch(IOException e) {
-            log.error("error fetching url", e);
-            throw new RuntimeException("Failed to fetch URL.",e );
-        }
-    }
-
-    private Tweet processTweetFromTitle(String title) {
-        System.out.println(title);
-		return new Tweet("dummy",new LinkedList<>(),2);// TODO implement
+    private String getTitleFromUrl() throws IOException {
+        Document doc = Jsoup.connect(tweetUrl).get();
+		String title = doc.title();
+		return title;
     }
 
     private void uploadTweetToQueue(Tweet tweet) {
