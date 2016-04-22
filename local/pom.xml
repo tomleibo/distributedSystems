@@ -38,6 +38,7 @@
             <id>production</id>
             <properties>
                 <aws-java-sdk-scope>provided</aws-java-sdk-scope>
+                <dsp-common-scope>provided</dsp-common-scope>
             </properties>
 
         </profile>
@@ -49,6 +50,7 @@
             <id>dev</id>
             <properties>
                 <aws-java-sdk-scope>compile</aws-java-sdk-scope>
+                <dsp-common-scope>compile</dsp-common-scope>
             </properties>
         </profile>
     </profiles>
@@ -75,6 +77,7 @@
             <groupId>dsp</groupId>
             <artifactId>common</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <scope>${dsp-common-scope}</scope>
         </dependency>
 
     </dependencies>

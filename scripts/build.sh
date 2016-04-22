@@ -1,8 +1,12 @@
+# Fail the script if anything bad happens
+set -e
 
 # use maven production profile that does not include aws sdk in the jar
 mvn_profile=production
 
-mvn --activate-profiles ${mvn_profile} install --file common/pom.xml -DskipTests
+mvn --activate-profiles ${mvn_profile} --file common/pom.xml clean
+mvn --activate-profiles ${mvn_profile} --file common/pom.xml compile assembly:single -DskipTests
+cp common/target/common-1.0-SNAPSHOT-jar-with-dependencies.jar production
 
 mvn --activate-profiles ${mvn_profile} --file manager/pom.xml clean
 mvn --activate-profiles ${mvn_profile} --file manager/pom.xml compile assembly:single -DskipTests
