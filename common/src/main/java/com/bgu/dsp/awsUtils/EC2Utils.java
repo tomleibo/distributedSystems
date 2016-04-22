@@ -129,6 +129,9 @@ public class EC2Utils {
             return new LinkedList<>();
         }
 
+        IamInstanceProfileSpecification iamInstanceProfile = new IamInstanceProfileSpecification().
+                withName(Utils.MANAGER_I_AM_PROFILE_NAME); // TODO use another iamprofile
+
         // TODO create a workers security group in AWS
         RunInstancesRequest request = new RunInstancesRequest().
                 withImageId(Utils.WORKER_IMAGE_ID).
@@ -137,7 +140,8 @@ public class EC2Utils {
                 withSecurityGroups(Utils.WORKERS_SECURITY_GROUP).
                 withInstanceType(Utils.WORKER_INSTANCE_TYPE).
                 withSecurityGroups(Utils.WORKERS_SECURITY_GROUP).
-                withUserData(getWorkerUserDataScript());
+                withUserData(getWorkerUserDataScript()).
+                withIamInstanceProfile(iamInstanceProfile);
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
         List<String> instancesIds = runInstancesResult.getReservation().getInstances().stream().map(Instance::getInstanceId).collect(Collectors.toList());
@@ -251,21 +255,31 @@ public class EC2Utils {
         lines.add("#! /bin/bash");
         lines.add("sudo su ec2-user");
         lines.add("cd /home/ec2-user");
-        lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-manager-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/manager.jar");
+        lines.add("curl " + Utils.S3_JARS_BUCKET + "dsp-1-manager-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/manager.jar");
+        lines.add("curl " + Utils.S3_JARS_BUCKET + "common-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/common.jar");
 
         // This line allows us to run the command as non root user in order to
         // user the AWS instance credentials
-        lines.add("sudo -u ec2-user -H sh -c 'java -cp \"manager.jar:aws-java-sdk-1.10.64/*\" com.bgu.dsp.manager.Main > manager_stdout_stderr.log 2>&1'");
+        lines.add("sudo -u ec2-user -H sh -c 'java -cp \"common.jar:manager.jar:aws-java-sdk-1.10.64/*\" com.bgu.dsp.manager.Main > manager_stdout_stderr.log 2>&1'");
         return new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
     }
 
     private static String getWorkerUserDataScript(){
         ArrayList<String> lines = new ArrayList<>();
         lines.add("#! /bin/bash");
-        lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-worker-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/worker.jar");
-        lines.add("java -cp \"worker.jar:aws-java-sdk-1.10.64/*\" com.bgu.dsp.worker.Worker > worker_stdout_stderr.log 2>&1");
-        String str = new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
-        return str;
+        lines.add("curl " + Utils.S3_JARS_BUCKET + "dsp-1-worker-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/worker.jar");
+        lines.add("curl " + Utils.S3_JARS_BUCKET + "common-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/common.jar");
+
+        lines.add("mkdir external-jars");
+        lines.add("curl " + Utils.S3_JARS_BUCKET + "ejml-0.23.jar > /home/ec2-user/external-jars");
+        lines.add("curl " + Utils.S3_JARS_BUCKET + "jollyday-0.4.7.jar > /home/ec2-user/external-jars");
+        lines.add("curl " + Utils.S3_JARS_BUCKET + "stanford-corenlp-3.3.0-models.jar > /home/ec2-user/external-jars");
+        lines.add("curl" + Utils.S3_JARS_BUCKET + "stanford-corenlp-3.3.0.jar  > /home/ec2-user/external-jars");
+
+        // This line allows us to run the command as non root user in order to
+        // user the AWS instance credentials
+        lines.add("sudo -u ec2-user -H sh -c 'java -cp \"worker.jar:common.jar:aws-java-sdk-1.10.64/*:external-jars/*\" com.bgu.dsp.worker.Worker > worker_stdout_stderr.log 2>&1'");
+        return new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
     }
 
     static String join(Collection<String> s, String delimiter) {

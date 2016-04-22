@@ -29,6 +29,7 @@ public class Utils {
      * This allows us to start workers in ec2 without sending the credentials
      */
     public static final String MANAGER_I_AM_PROFILE_NAME = "dsp-1-manager";
+    public static final String S3_JARS_BUCKET = "https://s3.amazonaws.com/dsp-jars/";
     public static Region region = Region.getRegion(Regions.US_EAST_1);
 
 	/**
