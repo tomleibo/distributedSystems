@@ -267,18 +267,23 @@ public class EC2Utils {
     private static String getWorkerUserDataScript(){
         ArrayList<String> lines = new ArrayList<>();
         lines.add("#! /bin/bash");
+        lines.add("cd /home/ec2-user");
         lines.add("curl " + Utils.S3_JARS_BUCKET + "dsp-1-worker-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/worker.jar");
         lines.add("curl " + Utils.S3_JARS_BUCKET + "common-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/common.jar");
 
         lines.add("mkdir external-jars");
-        lines.add("curl " + Utils.S3_JARS_BUCKET + "ejml-0.23.jar > /home/ec2-user/external-jars");
-        lines.add("curl " + Utils.S3_JARS_BUCKET + "jollyday-0.4.7.jar > /home/ec2-user/external-jars");
-        lines.add("curl " + Utils.S3_JARS_BUCKET + "stanford-corenlp-3.3.0-models.jar > /home/ec2-user/external-jars");
-        lines.add("curl" + Utils.S3_JARS_BUCKET + "stanford-corenlp-3.3.0.jar  > /home/ec2-user/external-jars");
+        String ejml = "ejml-0.23.jar";
+        lines.add("curl " + Utils.S3_JARS_BUCKET + ejml + " > /home/ec2-user/external-jars/" + ejml);
+        String jollyday = "jollyday-0.4.7.jar";
+        lines.add("curl " + Utils.S3_JARS_BUCKET + jollyday + " > /home/ec2-user/external-jars/" + jollyday);
+        String stanfordCoreNlpModels = "stanford-corenlp-3.3.0-models.jar";
+        lines.add("curl " + Utils.S3_JARS_BUCKET + stanfordCoreNlpModels + " > /home/ec2-user/external-jars/" + stanfordCoreNlpModels);
+        String stanfordCoreNlp = "stanford-corenlp-3.3.0.jar";
+        lines.add("curl " + Utils.S3_JARS_BUCKET + stanfordCoreNlp + "  > /home/ec2-user/external-jars/" + stanfordCoreNlp);
 
         // This line allows us to run the command as non root user in order to
         // user the AWS instance credentials
-        lines.add("sudo -u ec2-user -H sh -c 'java -cp \"worker.jar:common.jar:aws-java-sdk-1.10.64/*:external-jars/*\" com.bgu.dsp.worker.Worker > worker_stdout_stderr.log 2>&1'");
+        lines.add("sudo -u ec2-user -H sh -c 'java -Xmx 1000m -Xms 1000m -cp \"worker.jar:common.jar:aws-java-sdk-1.10.64/*:external-jars/*\" com.bgu.dsp.worker.Worker > worker_stdout_stderr.log 2>&1'");
         return new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
     }
 

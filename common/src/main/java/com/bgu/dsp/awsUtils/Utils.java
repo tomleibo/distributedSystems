@@ -16,7 +16,7 @@ public class Utils {
     public static final String WORKERS_SECURITY_GROUP = "workers_security_group";
     public static final String MANAGER_INSTANCE_NAME = "manager";
     public static final String MANAGER_SECURITY_GROUP = "manager_security_group";
-    public static final InstanceType WORKER_INSTANCE_TYPE = InstanceType.T2Micro;
+    public static final InstanceType WORKER_INSTANCE_TYPE = InstanceType.T2Small;
 
 	/**
 	 * This can be a relatively large number as it only represents the number of tasks that were

@@ -40,3 +40,9 @@ small, and add the aws jar (over 45 MB) in runtime
 When creating the jars with the `production` maven profile, all the jars that are contained in the aws sdk are expected
 to be found on the computer that runs the jar, under `aws-java-sdk-1.10.64` directory. For more detailes see
 `getManagerUserDataScript()` or `getWorkerUserDataScript()` in `EC2Utils.java`.
+
+### Production
+- Make sure that you have all the jars - `common`, `manager` and `worker` in
+s3 under the `S3_JARS_BUCKET`
+- Also make sure that all the external jars that are used by the worker (and listed
+in the worker's README) are in s3
