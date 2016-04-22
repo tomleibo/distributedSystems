@@ -4,11 +4,15 @@ First of all define your credentials as explained in [AWS documentation](http://
 ## External jars
 - Download the jars listed in the [worker readme](worker/jars/README.md)
 
-## Dev environment
 ## Local credentials
 - In production, machines that are started on EC2 are using `InstanceProfileCredentials`.
 If you are running the manager/workers locally, you will need to use regular credentials.
 To do so, add the environment variable `DSP_MODE=DEV`. Note that this collides with the [Mocks](#mocks)
+- In order to allow the manager to start workers, we need to give it permissions in
+EC2. To do so, define the `MANAGER_I_AM_PROFILE_NAME` in `Utils.java`, and add AWS IAM
+role with sufficient permissions. This allows us to use
+[InstanceProfileCredentialsProvider](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/index.html?com/amazonaws/auth/InstanceProfileCredentialsProvider.html)
+as described in [Providing AWS Credentials in the AWS SDK for Java](http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html).
 
 ### Mocks
 - We use [fake_sqs](https://github.com/iain/fake_sqs) to mock AWS SQS,

@@ -23,6 +23,12 @@ public class Utils {
      * acquired from the queue, and not the number of tasks that are actually running
      */
     public static final int NUM_OF_MANAGER_TASKS = 500;
+
+	/**
+	 * The AWS IAM role name that is used by the manager
+     * This allows us to start workers in ec2 without sending the credentials
+     */
+    public static final String MANAGER_I_AM_PROFILE_NAME = "dsp-1-manager";
     public static Region region = Region.getRegion(Regions.US_EAST_1);
 
 	/**

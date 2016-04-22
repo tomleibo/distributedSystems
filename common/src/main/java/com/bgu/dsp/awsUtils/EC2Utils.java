@@ -228,13 +228,17 @@ public class EC2Utils {
      * @return instance ID
      */
     public static String startManager() {
+        IamInstanceProfileSpecification iamInstanceProfile = new IamInstanceProfileSpecification().
+                withName(Utils.MANAGER_I_AM_PROFILE_NAME);
+
         RunInstancesRequest request = new RunInstancesRequest().
                 withImageId(Utils.MANAGER_IMAGE_ID).
                 withMinCount(1).
                 withMaxCount(1).
                 withSecurityGroups(Utils.MANAGER_SECURITY_GROUP).
                 withInstanceType(InstanceType.T2Micro).
-                withUserData(getManagerUserDataScript());
+                withUserData(getManagerUserDataScript()).
+                withIamInstanceProfile(iamInstanceProfile);
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
         String instancesIds = runInstancesResult.getReservation().getInstances().get(0).getInstanceId();
@@ -245,10 +249,14 @@ public class EC2Utils {
     private static String getManagerUserDataScript(){
         ArrayList<String> lines = new ArrayList<>();
         lines.add("#! /bin/bash");
+        lines.add("sudo su ec2-user");
+        lines.add("cd /home/ec2-user");
         lines.add("curl https://s3.amazonaws.com/dsp-jars/dsp-1-manager-1.0-SNAPSHOT-jar-with-dependencies.jar > /home/ec2-user/manager.jar");
-        lines.add("java -cp \"manager.jar:aws-java-sdk-1.10.64/*\" com.bgu.dsp.manager.Main > manager_stdout_stderr.log 2>&1");
-        String str = new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
-        return str;
+
+        // This line allows us to run the command as non root user in order to
+        // user the AWS instance credentials
+        lines.add("sudo -u ec2-user -H sh -c 'java -cp \"manager.jar:aws-java-sdk-1.10.64/*\" com.bgu.dsp.manager.Main > manager_stdout_stderr.log 2>&1'");
+        return new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
     }
 
     private static String getWorkerUserDataScript(){
