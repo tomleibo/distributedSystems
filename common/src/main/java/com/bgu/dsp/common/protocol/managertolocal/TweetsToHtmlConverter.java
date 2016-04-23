@@ -46,6 +46,7 @@ public class TweetsToHtmlConverter {
     private void convertAndWriteOutputHtml(File inFile, String outputFileName) {
         PrintWriter out = createFileAppendWriter(outputFileName);
         writeHtmlHeader(out);
+        writeTableHeader(out);
         try (TwitsReader reader = new TwitsReader(inFile.getPath())) {
             reader.init();
             while (true) {
@@ -69,6 +70,11 @@ public class TweetsToHtmlConverter {
             writeHtmlFooter(out);
             out.close();
         }
+    }
+
+    private void writeTableHeader(PrintWriter out) {
+        String html = "<tr><th>Tweets</td><th>Entities</td></tr>";
+        writeToWriter(html,out);
     }
 
     private void writeOneTweet(Tweet t, PrintWriter out) {
