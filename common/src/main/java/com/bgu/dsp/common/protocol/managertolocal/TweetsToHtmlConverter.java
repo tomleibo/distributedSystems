@@ -88,10 +88,29 @@ public class TweetsToHtmlConverter {
         for (String ent : t.entities) {
             html.append(prefix);
             prefix=", ";
-            html.append(ent);
+            html.append(getEntityHtml(ent));
         }
         html.append("</td></tr>");
         writeToWriter(html.toString(),out);
+    }
+
+	/**
+     * Adds a google link for the entity
+     */
+    private String getEntityHtml(String ent) {
+        try {
+            int lastIndex = ent.lastIndexOf(':');
+
+            String name = ent.substring(0, lastIndex);
+            String rest = ent.substring(lastIndex + 1);;
+            String query = name.replace(' ', '+');
+            return
+                    "<a href=\"http://www.google.com/search?q=" + query + "\">" + name + "</a>:" + rest;
+        }
+        catch (Exception e){
+            log.warn(e);
+            return ent;
+        }
     }
 
     private void writeHtmlHeader(PrintWriter out ) {
@@ -110,7 +129,6 @@ public class TweetsToHtmlConverter {
         File file = new File(outputFileName);
         if (!file.exists()) {
             try {
-                //file.mkDirs()
                 file.createNewFile();
             }
             catch (IOException e) {
