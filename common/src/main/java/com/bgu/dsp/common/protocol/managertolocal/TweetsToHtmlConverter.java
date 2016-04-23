@@ -25,11 +25,11 @@ public class TweetsToHtmlConverter {
         this.bucketName=bucketName;
         this.key=key;
         colorMap = new HashMap<>();
-        colorMap.put(0, "color0");
-        colorMap.put(1, "color1");
-        colorMap.put(2, "color2");
-        colorMap.put(3, "color3");
-        colorMap.put(4, "color4");
+        colorMap.put(0, "darkred");
+        colorMap.put(1, "red");
+        colorMap.put(2, "black");
+        colorMap.put(3, "lightgreen");
+        colorMap.put(4, "darkgreen");
     }
 
     public void execute(String outputFileName) {
@@ -73,9 +73,9 @@ public class TweetsToHtmlConverter {
 
     private void writeOneTweet(Tweet t, PrintWriter out) {
         StringBuilder html = new StringBuilder();
-        html.append("<tr class='");
+        html.append("<tr style=\"color: ");
         html.append(colorMap.get(Integer.valueOf(t.sentiment)));
-        html.append("'><td>");
+        html.append(";\"><td>");
         html.append(t.tweet);
         html.append("</td><td>");
         String prefix="";
@@ -98,40 +98,6 @@ public class TweetsToHtmlConverter {
         String html = "</table></body></html>";
         writeToWriter(html,out);
 
-    }
-
-    private String convertToHtml(List<Tweet> matrix) {
-        List<Tag> rows = new ArrayList<>();
-        for (Tweet tweet : matrix) {
-            StringBuilder entityList = new StringBuilder();
-            String prefix="";
-            for (String s : tweet.entities) {
-                entityList.append(prefix);
-                prefix=", ";
-                entityList.append(s);
-            }
-            Map<Integer,String> colorMap = new HashMap<>();
-            colorMap.put(0,"color0");
-            colorMap.put(1, "color1");
-            colorMap.put(2, "color2");
-            colorMap.put(3, "color3");
-            colorMap.put(4, "color4");
-            ContainerTag tr = tr().with(td(tweet.tweet), td(entityList.toString()));
-            tr.setAttribute("class",colorMap.get(tweet.sentiment));
-            rows.add(tr);
-        }
-
-
-        String html = html().with(
-                head().with(
-                        title("Distributed Systems Assignment 1"),
-                        link().withRel("stylesheet").withHref("./css.css")
-                ),
-                body().with(
-                        table().with(rows)
-                )
-        ).render();
-        return html;
     }
 
     private PrintWriter createFileAppendWriter(String outputFileName) {
