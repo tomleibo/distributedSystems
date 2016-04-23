@@ -73,7 +73,7 @@ public class TweetsToHtmlConverter {
     }
 
     private void writeTableHeader(PrintWriter out) {
-        String html = "<tr><th>Tweets</td><th>Entities</td></tr>";
+        String html = "<thead><tr><th>Tweets</td><th>Entities</td></tr></thead>";
         writeToWriter(html,out);
     }
 
