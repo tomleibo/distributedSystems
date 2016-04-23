@@ -144,10 +144,19 @@ public class EC2Utils {
                 withIamInstanceProfile(iamInstanceProfile);
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
+        // Add ssh key for development
+        if (getAwsKeyName() != null){
+            request.setKeyName(getAwsKeyName());
+        }
+
         List<String> instancesIds = runInstancesResult.getReservation().getInstances().stream().map(Instance::getInstanceId).collect(Collectors.toList());
 
         tagWorkers(instancesIds);
         return instancesIds;
+    }
+
+    private static String getAwsKeyName() {
+        return System.getenv("AWS_KEY_NAME");
     }
 
     private static void tagWorkers(List<String> instancesIds) {
@@ -243,6 +252,12 @@ public class EC2Utils {
                 withInstanceType(InstanceType.T2Micro).
                 withUserData(getManagerUserDataScript()).
                 withIamInstanceProfile(iamInstanceProfile);
+
+        // Add ssh key for development
+        if (getAwsKeyName() != null){
+            request.setKeyName(getAwsKeyName());
+        }
+
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
         String instancesIds = runInstancesResult.getReservation().getInstances().get(0).getInstanceId();
@@ -283,7 +298,8 @@ public class EC2Utils {
 
         // This line allows us to run the command as non root user in order to
         // user the AWS instance credentials
-        lines.add("sudo -u ec2-user -H sh -c 'java -Xmx 1000m -Xms 1000m -cp \"worker.jar:common.jar:aws-java-sdk-1.10.64/*:external-jars/*\" com.bgu.dsp.worker.Worker > worker_stdout_stderr.log 2>&1'");
+        String javaCmd = "java -Xmx1000m -Xms1000m -cp \"worker.jar:common.jar:aws-java-sdk-1.10.64/*:external-jars/*\" com.bgu.dsp.worker.Worker > worker_stdout_stderr.log 2>&1";
+        lines.add("sudo -u ec2-user -H sh -c '" + javaCmd + "'");
         return new String(Base64.encodeBase64(join(lines, "\n").getBytes()));
     }
 
