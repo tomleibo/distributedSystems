@@ -9,11 +9,11 @@ import com.bgu.dsp.common.MessageKeepAlive;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
+import com.bgu.dsp.common.protocol.localtomanager.NewTaskCommand;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
@@ -62,6 +62,7 @@ public class Main {
 
 		ExecutorService executor = Executors.newCachedThreadPool();
 		SQSHandler sqsHandler = new SQSHandler();
+		String lastSqsName = null;
 		while (true){
 			try {
 				Message messageFromQueue = sqsHandler.getCommandFromQueue(localToManagerQueueUrl);
@@ -87,6 +88,9 @@ public class Main {
 								tasks.release();
 							});
 					if (commandFromQueue.shouldTerminate()) {
+						if (commandFromQueue instanceof NewTaskCommand) {
+							lastSqsName = ((NewTaskCommand) commandFromQueue).getSqsName();
+						}
 						break;
 					}
 				}
@@ -104,26 +108,49 @@ public class Main {
 		logger.info("Manager is now shutting down all the workers");
 		EC2Utils.terminateAllWorkers();
 
-		writeWorkersStatisticsToS3(workersStatistics.toString());
+		sendStatistics(lastSqsName);
 
 		logger.info(workersStatistics.toString());
 		logger.info("All tasks completed. Manager is exiting");
 
 	}
 
-	private static void writeWorkersStatisticsToS3(String stats) {
+	private static void sendStatistics(String lastSqsName) {
+		if (lastSqsName != null) {
+			String fileKey = writeWorkersStatisticsToS3(workersStatistics.toString());
+
+			if (fileKey != null) {
+				// filekey == null means failure to upload the stats file to s3
+				SQSUtils.sendMessage(
+						SQSUtils.getQueueUrlByName(lastSqsName),
+						fileKey
+				);
+			}
+			else {
+				SQSUtils.sendMessage(
+						SQSUtils.getQueueUrlByName(lastSqsName),
+						"NO_STATS_FILE"
+				);
+			}
+		}
+	}
+
+	private static String writeWorkersStatisticsToS3(String stats) {
 
 		try {
 			File statsFile = new File("stats");
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
 			FileUtils.writeStringToFile(statsFile, stats);
+			String fileKey = "statistics_" + timeStamp + ".txt";
 			S3Utils.uploadFile(MANAGER_TO_LOCAL_BUCKET_NAME,
-					"statistics_" + timeStamp + ".txt",
+					fileKey,
 					statsFile);
+			return fileKey;
 
 		} catch (Exception e) {
 			logger.error("Failed to write workers statistics to file", e);
 		}
+		return null;
 	}
 
 
