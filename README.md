@@ -1,6 +1,9 @@
 ## Credentials
 First of all define your credentials as explained in [AWS documentation](http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html#using-the-default-credential-provider-chain)
 
+## AWS cli
+After building the jars using [`scripts/build.sh`](scripts/build.sh), you need
+to deploy the jars to s3, for that we are using [AWS CLI](https://aws.amazon.com/cli/)
 ## External jars
 - Download the jars listed in the [worker readme](worker/jars/README.md)
 
