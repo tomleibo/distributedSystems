@@ -5,16 +5,13 @@ import com.bgu.dsp.common.WorkersStatisticsI;
 import java.util.HashMap;
 import java.util.UUID;
 
-/**
- * Created by hagai_lvi on 16/04/2016.
- */
 public class WorkersStatistics implements WorkersStatisticsI {
 	private HashMap<UUID, Stats> map = new HashMap<>();
 
 	@Override
 	public void addSuccessfulTask(UUID workerUUID) {
 		Stats current = map.getOrDefault(workerUUID, new Stats());
-		current.addSuccessfullTask();
+		current.addSuccessfulTask();
 		map.put(workerUUID, current);
 	}
 
@@ -39,10 +36,12 @@ public class WorkersStatistics implements WorkersStatisticsI {
 	}
 
 	private class Stats{
+
 		@Override
 		public String toString() {
 			return "successCount=" + successCount +
-					", failCount=" + failCount;
+					", failCount=" + failCount +
+					", totalCount=" + (successCount + failCount);
 		}
 
 		private long successCount = 0;
@@ -56,7 +55,7 @@ public class WorkersStatistics implements WorkersStatisticsI {
 			return successCount;
 		}
 
-		public void addSuccessfullTask() {
+		public void addSuccessfulTask() {
 			successCount++;
 		}
 
