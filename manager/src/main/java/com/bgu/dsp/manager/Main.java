@@ -9,12 +9,19 @@ import com.bgu.dsp.common.MessageKeepAlive;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerCommand;
 import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
-import java.util.concurrent.*;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
-import static com.bgu.dsp.awsUtils.Utils.LOCAL_TO_MANAGER_QUEUE_NAME;
-import static com.bgu.dsp.awsUtils.Utils.MANAGER_TO_WORKERS_QUEUE_NAME;
+import static com.bgu.dsp.awsUtils.Utils.*;
 
 public class Main {
 	final static Logger logger = Logger.getLogger(Main.class);
@@ -97,9 +104,26 @@ public class Main {
 		logger.info("Manager is now shutting down all the workers");
 		EC2Utils.terminateAllWorkers();
 
+		writeWorkersStatisticsToS3(workersStatistics.toString());
+
 		logger.info(workersStatistics.toString());
 		logger.info("All tasks completed. Manager is exiting");
 
+	}
+
+	private static void writeWorkersStatisticsToS3(String stats) {
+
+		try {
+			File statsFile = new File("stats");
+			String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+			FileUtils.writeStringToFile(statsFile, stats);
+			S3Utils.uploadFile(MANAGER_TO_LOCAL_BUCKET_NAME,
+					"statistics_" + timeStamp + ".txt",
+					statsFile);
+
+		} catch (Exception e) {
+			logger.error("Failed to write workers statistics to file", e);
+		}
 	}
 
 
