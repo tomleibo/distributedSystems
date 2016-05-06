@@ -1,3 +1,0 @@
-Todo: S3Tests assert downloaded and uploaded files are identical
-TODO: add md5 check on Sqs.sendMessage
-
