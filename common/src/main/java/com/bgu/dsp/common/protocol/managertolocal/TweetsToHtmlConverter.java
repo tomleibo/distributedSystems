@@ -3,15 +3,12 @@ package com.bgu.dsp.common.protocol.managertolocal;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.common.protocol.managertolocal.serialize.IllegalSerializedObjectException;
 import com.bgu.dsp.common.protocol.managertolocal.serialize.TwitsReader;
-import j2html.tags.ContainerTag;
-import j2html.tags.Tag;
 import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
 
 import java.io.*;
 import java.util.*;
 
-import static j2html.TagCreator.*;
+import static com.sun.xml.internal.fastinfoset.alphabet.BuiltInRestrictedAlphabets.table;
 
 
 public class TweetsToHtmlConverter {
@@ -20,6 +17,71 @@ public class TweetsToHtmlConverter {
     private final String bucketName;
     private final String key;
     private Map<Integer, String> colorMap;
+
+    private final String css = "body {\n" +
+            "  margin: 0;\n" +
+            "  height: 100%;\n" +
+            "  width: 100%;\n" +
+            "  font-size: 14px;\n" +
+            "  font-family: \"Helvetica Neue\",Helvetica,Arial,Sans-serif;\n" +
+            "  font-weight: 300;\n" +
+            "  text-align: center;\n" +
+            "  cursor: default;\n" +
+            "\n" +
+            "  -webkit-user-select: none;\n" +
+            "  -khtml-user-select: none;\n" +
+            "  -moz-user-select: none;\n" +
+            "  -o-user-select: none;\n" +
+            "  user-select: none;\n" +
+            "\n" +
+            "  -ms-touch-action: none;\n" +
+            "}\n" +
+            ".header {\n" +
+            "  position: relative;\n" +
+            "  height: 100%;\n" +
+            "  width: 1200px;\n" +
+            "  margin-top: 1cm;"+
+            "}\n" +
+            ".footer {\n" +
+            "  position: fixed;\n" +
+            "  bottom: 0;\n" +
+            "  left: 0;\n" +
+            "  right: 0;\n" +
+            "  padding-top: 18px;\n" +
+            "  padding-bottom: 2px;\n" +
+            "  background: -webkit-gradient(linear, left bottom, left top, from(rgba(255, 255, 255, 1)), to(rgba(255, 255, 255, 0)));\n" +
+            "  background: -moz-linear-gradient(bottom, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));\n" +
+            "}"
+            +"table { \n" +
+            "color: #333;\n" +
+            "font-family: Helvetica, Arial, sans-serif;\n" +
+            "border-collapse: collapse;\n" +
+            "border-spacing: 0; \n" +
+            "}\n" +
+            "\n" +
+            "td, th { \n" +
+            "border: 1px solid transparent; /* No more visible border */\n" +
+            "height: 30px; \n" +
+            "transition: all 0.3s;  /* Simple transition for hover effect */\n" +
+            "}\n" +
+            "\n" +
+            "th {\n" +
+            "background: #DFDFDF;  /* Darken header a bit */\n" +
+            "font-weight: bold;\n" +
+            "}\n" +
+            "\n" +
+            "td {\n" +
+            "background: #FAFAFA;\n" +
+            "text-align: left;\n" +
+            "}\n" +
+            "\n" +
+            "/* Cells in even rows (2,4,6...) are one color */ \n" +
+            "tr:nth-child(even) td { background: #F1F1F1; }   \n" +
+            "\n" +
+            "/* Cells in odd rows (1,3,5...) are another (excludes header cells)  */ \n" +
+            "tr:nth-child(odd) td { background: #FEFEFE; }  \n" +
+            "\n" +
+            "tr td:hover { background: #666; color: #FFF; } /* Hover cell effect! */";
 
     public TweetsToHtmlConverter(String bucketName, String key) {
         this.bucketName=bucketName;
@@ -51,7 +113,7 @@ public class TweetsToHtmlConverter {
             reader.init();
             while (true) {
                Tweet t = reader.read();
-                writeOneTweet(t,out);
+               writeOneTweet(t,out);
             }
         }
         catch (EOFException e) {
@@ -74,10 +136,11 @@ public class TweetsToHtmlConverter {
 
     private void writeTableHeader(PrintWriter out) {
         String html = "<thead><tr><th>Tweets</td><th>Entities</td></tr></thead>";
-        writeToWriter(html,out);
+        out.println(html);
     }
 
     private void writeOneTweet(Tweet t, PrintWriter out) {
+        log.debug("Writing one tweet to file.");
         StringBuilder html = new StringBuilder();
         html.append("<tr style=\"color: ");
         html.append(colorMap.get(Integer.valueOf(t.sentiment)));
@@ -91,7 +154,7 @@ public class TweetsToHtmlConverter {
             html.append(getEntityHtml(ent));
         }
         html.append("</td></tr>");
-        writeToWriter(html.toString(),out);
+        out.println(html.toString());
     }
 
 	/**
@@ -114,14 +177,16 @@ public class TweetsToHtmlConverter {
     }
 
     private void writeHtmlHeader(PrintWriter out ) {
-        String html = "<html><head><title>Distributed Systems Assignment 1</title><link rel=\"stylesheet\" href=\"./css.css\"></head><body><table>";
-        writeToWriter(html,out);
+        String html = "<html><head><title>Distributed Systems Assignment 1</title>" +
+                "<style>\n"+css+"\n</style>\n"+
+                "</head><body><div class=\"header\"><table>";
+        out.println(html);
 
     }
 
     private void writeHtmlFooter(PrintWriter out )  {
-        String html = "</table></body></html>";
-        writeToWriter(html,out);
+        String html = "</table></div><div class=\"footer\">Created by Tom Leibovich and Hagai Levi</div></body></html>";
+        out.println(html);
 
     }
 
@@ -146,10 +211,6 @@ public class TweetsToHtmlConverter {
             log.error(e);
         }
         return null;
-    }
-
-    private void writeToWriter(String html, PrintWriter out) {
-        out.println(html);
     }
 
 
