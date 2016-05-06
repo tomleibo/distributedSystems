@@ -1,6 +1,7 @@
 package com.bgu.dsp.awsUtils;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
@@ -15,6 +16,7 @@ import java.io.*;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,6 +86,43 @@ public class S3Utils {
                 .getObjectSummaries()
                 .stream().map(S3ObjectSummary::getKey)
                 .collect(Collectors.toList());
+
+    }
+
+    public static void emptyAnddeleteBucket(String bucketName) {
+        try {
+            System.out.println("Deleting S3 bucket: " + bucketName);
+            ObjectListing objectListing = s3.listObjects(bucketName);
+
+            while (true) {
+                for (Iterator<?> iterator = objectListing.getObjectSummaries().iterator(); iterator.hasNext(); ) {
+                    S3ObjectSummary objectSummary = (S3ObjectSummary) iterator.next();
+                    s3.deleteObject(bucketName, objectSummary.getKey());
+                }
+
+                if (objectListing.isTruncated()) {
+                    objectListing = s3.listNextBatchOfObjects(objectListing);
+                } else {
+                    break;
+                }
+            };
+            VersionListing list = s3.listVersions(new ListVersionsRequest().withBucketName(bucketName));
+            for ( Iterator<?> iterator = list.getVersionSummaries().iterator(); iterator.hasNext(); ) {
+                S3VersionSummary s = (S3VersionSummary)iterator.next();
+                s3.deleteVersion(bucketName, s.getKey(), s.getVersionId());
+            }
+            s3.deleteBucket(bucketName);
+
+
+        } catch (AmazonServiceException ase) {
+            System.out.println("Error Message:    " + ase.getMessage());
+            System.out.println("HTTP Status Code: " + ase.getStatusCode());
+            System.out.println("AWS Error Code:   " + ase.getErrorCode());
+            System.out.println("Error Type:       " + ase.getErrorType());
+            System.out.println("Request ID:       " + ase.getRequestId());
+        } catch (AmazonClientException ace) {
+            System.out.println("Error Message: " + ace.getMessage());
+        }
 
     }
 
