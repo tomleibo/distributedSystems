@@ -1,5 +1,6 @@
 package com.bgu.dsp.main;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
@@ -32,21 +33,37 @@ public class SqsLooper implements Runnable {
     public void run() {
         log.info("starting sqs looper");
         do {
-            Message msg = SQSUtils.getMessage(env.inQueueUrl, 20);
+            Message msg=null;
+            try {
+                msg = SQSUtils.getMessage(env.inQueueUrl, 20);
+            }
+            catch(AmazonClientException e) {
+                log.error("failed to fetch sqs message: "+e);
+            }
             if (msg!=null) {
-                SQSUtils.deleteMessage(env.inQueueUrl, msg);
                 try {
                     TweetsToHtmlConverter converter =ManagerToLocalSqsProtocol.parse(msg.getBody());
                     converter.execute(env.outputFileName);
                     if (env.terminate) {
                         // Expect a statistics file
                         String statsFile = downloadStatsFile();
-                        log.info("Stats file located at " + statsFile);
+                        if (statsFile != null) {
+                            log.info("Stats file located at " + statsFile);
+                        }
+                        else {
+                            log.info("download statistics file failed.");
+                        }
                     }
                     break;
                 }
                 catch (MalformedMessageException e) {
                     malFormedMessage(msg.getBody(),e);
+                }
+                try {
+                    SQSUtils.deleteMessage(env.inQueueUrl, msg);
+                }
+                catch(AmazonClientException e)  {
+                    log.error("failed to delete manager to local sqs message.",e);
                 }
             }
             try {
@@ -61,13 +78,21 @@ public class SqsLooper implements Runnable {
 
     private String downloadStatsFile() {
         // TODO how to know when did the manager has finished to upload the statistics file?
-        Message message = SQSUtils.getMessage(env.inQueueUrl, 20);
+        Message message=null;
+        try {
+            message = SQSUtils.getMessage(env.inQueueUrl, 20);
+        }
+        catch(AmazonClientException e) {
+            log.error("Failed to fetch statistics file location sqs message"+e);
+        }
+
         if (message != null && (! "NO_STATS_FILE".equals(message.getBody()))) {
 			try {
                 File file = S3Utils.downloadFile(Utils.MANAGER_TO_LOCAL_BUCKET_NAME,
                         message.getBody());
                 return file.getAbsolutePath();
-            } catch (IOException e) {
+            }
+            catch (IOException | AmazonClientException e) {
 				log.error("Could not get statistics file", e);
 			}
 		}

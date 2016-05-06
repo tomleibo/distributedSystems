@@ -60,14 +60,12 @@ public class EC2Utils {
 
     public static List<String> getAllWorkersIds(){
         List<String> res = new LinkedList<>();
-
         DescribeInstancesResult allWorkers = getAllWorkers();
         for (Reservation reservation : allWorkers.getReservations()) {
             for (Instance instance : reservation.getInstances()) {
                 res.add(instance.getInstanceId());
             }
         }
-
         return res;
     }
 

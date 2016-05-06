@@ -148,8 +148,8 @@ public class S3Utils {
         try {
             InputStream stream = new FileInputStream(file);
             return uploadFile(bucket, key, stream, file.length());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (FileNotFoundException | AmazonClientException e) {
+            logger.error(e);
             return false;
         }
     }

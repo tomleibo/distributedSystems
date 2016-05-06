@@ -1,6 +1,9 @@
 package com.bgu.dsp.main;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.sqs.model.QueueNameExistsException;
 import com.bgu.dsp.awsUtils.EC2Utils;
@@ -14,6 +17,7 @@ import java.util.UUID;
 
 public class LocalMachine implements Runnable{
     final static Logger log = Logger.getLogger(LocalMachine.class);
+    private static final long RETRY_DURATION = 2000;
     LocalEnv env;
 
     public LocalMachine() {
@@ -48,6 +52,10 @@ public class LocalMachine implements Runnable{
         catch(QueueNameExistsException e) {
             env.outQueueUrl =SQSUtils.getQueueUrlByName(LocalEnv.LOCAL_TO_MANAGER_QUEUE_NAME);
         }
+        catch(AmazonClientException e2) {
+            log.error("queue creation\\fetch failed. exiting. ",e2);
+            System.exit(1);
+        }
         env.inQueueName = UUID.randomUUID().toString();
         env.inQueueUrl = SQSUtils.createQueue(env.inQueueName);
     }
@@ -79,7 +87,7 @@ public class LocalMachine implements Runnable{
         Bucket bucket = getOrCreateBucketByName(LocalEnv.BUCKET_NAME);
         File inFile = new File(inputFileName);
         if (!S3Utils.uploadFile(bucket, LocalEnv.INPUT_FILE_KEY,inFile)){
-            fileUploadFailed(bucket,inFile, LocalEnv.INPUT_FILE_KEY);
+            fileUploadFailed(inputFileName);
         }
         log.info("upload successful: "+inFile.getPath());
     }
@@ -99,23 +107,30 @@ public class LocalMachine implements Runnable{
 
 
     public  boolean isManagerNodeActive() {
-        Instance ins  = EC2Utils.getManagerInstance();
+        Instance ins=null;
+        try {
+            ins = EC2Utils.getManagerInstance();
+        }
+        catch(AmazonClientException e) {
+            log.error("Ec2 call failed. Failed to check if manager is up.",e);
+        }
         if (ins==null) {
             return false;
         }
         return true;
     }
 
-    private  void fileUploadFailed(Bucket bucket, File inFile, String inputFileKey) {
-        String message = "Tweet-File upload failed";
+    private  void fileUploadFailed(String inFile) {
+        String message = "Tweet-File ("+inFile+") upload failed. exiting";
         log.error(message);
-        throw new RuntimeException(message);
+        System.out.println(message);
+        System.exit(1);
     }
 
     private  void sqsMessageNotSent(String queueUrl, String messageBody) {
-        String message = "Sqs message sending failed. url: " + queueUrl + " body:\n" + messageBody;
+        String message = "Sqs message sending failed. Exiting. \nDetails: url: " + queueUrl + " body:\n" + messageBody;
         log.error(message);
-        throw new RuntimeException(message);
+        System.exit(1);
     }
 
     private class HeartBit implements Runnable {
@@ -126,13 +141,18 @@ public class LocalMachine implements Runnable{
             try {
                 log.info("heartbit started.");
                 while (true) {
-                    if (!isManagerNodeActive()) {
-                        log.info("Heartbeat waiting for the manager to become active");
-                        Thread.sleep(1000 * 120);
+                    try {
                         if (!isManagerNodeActive()) {
-                            log.warn("Manager is not active for 2 minutes, heartbeat is activating the manager");
-                            startManager();
+                            log.info("Heartbeat waiting for the manager to become active");
+                            Thread.sleep(1000 * 120);
+                            if (!isManagerNodeActive()) {
+                                log.warn("Manager is not active for 2 minutes, heartbeat is activating the manager");
+                                startManager();
+                            }
                         }
+                    }
+                    catch(AmazonClientException e) {
+                        log.error("Heartbit check Failed. AmazonClientException has been thrown:",e);
                     }
                     Thread.sleep(SLEEP_CYCLE);
                 }
