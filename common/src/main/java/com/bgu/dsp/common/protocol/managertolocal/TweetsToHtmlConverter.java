@@ -97,7 +97,9 @@ public class TweetsToHtmlConverter {
     public void execute(String outputFileName) {
         try {
             File tmpTweetFile = S3Utils.downloadFile(bucketName, key);
+            long startTime = System.currentTimeMillis();
             convertAndWriteOutputHtml(tmpTweetFile,outputFileName);
+            log.debug("Output file writing took "+(System.currentTimeMillis()-startTime)+" milliseconds.");
             tmpTweetFile.delete();
         }
         catch (IOException e) {
