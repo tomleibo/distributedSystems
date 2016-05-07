@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.*;
 
-import static com.sun.xml.internal.fastinfoset.alphabet.BuiltInRestrictedAlphabets.table;
 
 
 public class TweetsToHtmlConverter {
