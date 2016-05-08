@@ -16,20 +16,15 @@ public class LocalToManagerSQSProtocol {
 	 *                will send the reply (separate queue for each local)
 	 * @param bucketName The bucket to which the local saved the tweets file
 	 * @param key The key underwhich the local saved the tweets file.
-	 * @param terminate if true, the manager will not accept any more tasks after this one, and will terminate
 	 * @param tasksPerWorker - Used to determine the workers/tasks ration. referred to as <i>"n"</i> in the assignment description
 	 */
-	public static String newTaskMessage(String sqsName, String bucketName, String key, boolean terminate, float tasksPerWorker){
-		NewTaskCommand newTaskCommand = new NewTaskCommand(sqsName, bucketName, key, terminate, tasksPerWorker);
+	public static String newTaskMessage(String sqsName, String bucketName, String key, float tasksPerWorker){
+		NewTaskCommand newTaskCommand = new NewTaskCommand(sqsName, bucketName, key, tasksPerWorker);
 		return  new Gson().toJson(newTaskCommand);
-
 	}
 
-	/**
-	 * @deprecated Use the terminate argument of {@link #newTaskMessage(String, String, String, boolean, float)}
-	 */
-	public static String newTerminateMessage() {
-		throw new UnsupportedOperationException("Use the terminate argument of newTaskMessage() instead of this method");
+	public static String newTerminateMessage(String sqsName) {
+		return  new Gson().toJson(NewTaskCommand.getTerminateTask(sqsName));
 	}
 
 

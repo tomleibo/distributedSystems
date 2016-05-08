@@ -50,10 +50,6 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		return key;
 	}
 
-	public boolean isTerminate() {
-		return terminate;
-	}
-
 	public UUID getTaskID() {
 		return taskID;
 	}
@@ -67,23 +63,42 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	 *                will send the reply (separate queue for each local)
 	 * @param bucketName The bucket to which the local saved the tweets file
 	 * @param key The key underwhich the local saved the tweets file.
-	 * @param terminate if true, the manager will not accept any more tasks after this one, and will terminate
 	 * @param tasksPerWorker - Used to determine the workers/tasks ration. referred to as <i>"n"</i> in the assignment description
 	 */
-	public NewTaskCommand(String sqsName, String bucketName, String key, boolean terminate, float tasksPerWorker){
+	public NewTaskCommand(String sqsName, String bucketName, String key, float tasksPerWorker){
 		if (tasksPerWorker <= 0){
 			throw new IllegalArgumentException("tasksPerWorker must be > 0, Got " + tasksPerWorker);
 		}
 		this.sqsName = sqsName;
 		this.bucketName = bucketName;
 		this.key = key;
-		this.terminate = terminate;
+		this.terminate = false;
 		this.taskID = UUID.randomUUID();
 		this.tasksPerWorker = tasksPerWorker;
 	}
 
+	/**
+	 * @return a task that represents termination
+	 */
+	public static NewTaskCommand getTerminateTask(String sqsName) {
+		return new NewTaskCommand(sqsName);
+	}
+
+	private NewTaskCommand(String sqsName) {
+		this.sqsName = sqsName;
+		this.terminate = true;
+		bucketName = null;
+		key = null;
+		taskID = null;
+		tasksPerWorker = -1;
+	}
+
 	@Override
 	public void run() {
+		if (shouldTerminate()) {
+			return;
+		}
+
 		String workersToManagerQueueName = null;
 		try {
 			startWorkers();
@@ -108,6 +123,10 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	}
 
 	private void replyToLocal() {
+		if (shouldTerminate()) {
+			return;
+		}
+
 		String msg = ManagerToLocalSqsProtocol.newFileLocationMessage(Utils.MANAGER_TO_LOCAL_BUCKET_NAME, getResFilekey());
 		String queueUrl = SQSUtils.getQueueUrlByName(sqsName);
 		logger.debug("Manager sending reply to local in queue " + sqsName);
@@ -115,10 +134,16 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	}
 
 	private String getResFilekey() {
+		if (shouldTerminate()) {
+			throw new RuntimeException("No res file key for terminate task");
+		}
 		return "result_" + this.taskID.toString();
 	}
 
 	private void publishResultsToS3(String resFilekey) throws IOException {
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
 
 		logger.info("Manager uploading results to S3. File-key " + resFilekey +
 				", bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
@@ -135,6 +160,10 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	 * Wait for all the tasks sent to the workers to be completed
 	 */
 	private void getRepliesAndUploadToS3(String workersToManagerQueueName, int numberOfTweets) throws IOException {
+
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
 
 		final int timeoutSeconds = 20;
 		String resFilekey = getResFilekey();
@@ -175,6 +204,10 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	}
 
 	private void deleteLocalResultsFile(String resFilekey) {
+
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
 		File resFile = new File(resFilekey);
 		if (!resFile.delete()){
 			logger.warn("Manager could not delete results file after uploading it to S3.\n" +
@@ -188,6 +221,10 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	 * @throws IOException if failed to read the file
 	 */
 	private int postTweetsToQueue(String workersToManagerQueueName) throws IOException {
+
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
 
 		String managerToWorkersQueueUrl = SQSUtils.getQueueUrlByName(MANAGER_TO_WORKERS_QUEUE_NAME);
 
@@ -217,12 +254,22 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	 * @return the queue's name
 	 */
 	private String createQueue() {
+
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
+
 		String workersToManagerQueueName = getNewQueueName();
 		SQSUtils.createQueue(workersToManagerQueueName);
 		return workersToManagerQueueName;
 	}
 
 	private String getNewQueueName() {
+
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
+
 		return "task_queue_" + this.taskID.toString();
 	}
 
@@ -231,6 +278,11 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	 * Calculate the required number of workers and start them
 	 */
 	private void startWorkers() {
+
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
+
 		int numOfWorkers = getTotalNumOfRequiredWorkers();
 		int currentNumOfWorkers = EC2Utils.countWorkers();
 		int workersToStart = numOfWorkers - currentNumOfWorkers;
@@ -247,6 +299,10 @@ public class NewTaskCommand implements LocalToManagerCommand {
 
 	@Override
 	public void addWorkerStatisticsHandler(WorkersStatisticsI workersStatistics) {
+
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
 		this.workerStatisticsHandler = workersStatistics;
 	}
 
@@ -255,6 +311,11 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	 */
 	@Override
 	public int getTotalNumOfRequiredWorkers() {
+
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
+
 		int numberOfLines = 0;
 		try {
 			numberOfLines = countLines();
@@ -270,6 +331,11 @@ public class NewTaskCommand implements LocalToManagerCommand {
 	}
 
 	private int countLines() throws IOException {
+
+		if (shouldTerminate()) {
+			throw new RuntimeException();
+		}
+
 		File file = S3Utils.downloadFile(bucketName, key);
 		int numberOfLines = 0;
 

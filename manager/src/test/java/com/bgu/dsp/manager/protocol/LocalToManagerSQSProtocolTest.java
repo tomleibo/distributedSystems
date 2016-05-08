@@ -19,8 +19,7 @@ public class LocalToManagerSQSProtocolTest {
 
 		String sqsName = "mySqs";
 		float tasksPerWorker = 2.0F;
-		boolean terminate = false;
-		String msg = LocalToManagerSQSProtocol.newTaskMessage(sqsName, bucketName, key, terminate, tasksPerWorker);
+		String msg = LocalToManagerSQSProtocol.newTaskMessage(sqsName, bucketName, key, tasksPerWorker);
 
 		LocalToManagerCommand task = LocalToManagerSQSProtocol.parse(msg);
 		NewTaskCommand taskCasted = (NewTaskCommand) task;
@@ -29,7 +28,7 @@ public class LocalToManagerSQSProtocolTest {
 		Assert.assertEquals(key, taskCasted.getKey());
 		Assert.assertEquals(sqsName, taskCasted.getSqsName());
 		Assert.assertEquals(tasksPerWorker, taskCasted.getTasksPerWorker(),0);
-		Assert.assertEquals(terminate, taskCasted.isTerminate());
+		Assert.assertFalse(taskCasted.shouldTerminate());
 
 	}
 

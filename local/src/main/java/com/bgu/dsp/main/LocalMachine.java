@@ -1,9 +1,7 @@
 package com.bgu.dsp.main;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.sqs.model.QueueNameExistsException;
 import com.bgu.dsp.awsUtils.EC2Utils;
@@ -61,12 +59,25 @@ public class LocalMachine implements Runnable{
     }
 
     private  void sendMessageToManager() {
-        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(env.inQueueName, LocalEnv.BUCKET_NAME, LocalEnv.INPUT_FILE_KEY, env.terminate,env.filesToWorkersRatio);
+        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(env.inQueueName, LocalEnv.BUCKET_NAME, LocalEnv.INPUT_FILE_KEY,env.filesToWorkersRatio);
         boolean messageSent = SQSUtils.sendMessage(env.outQueueUrl, messageBody);
         if (!messageSent) {
             sqsMessageNotSent(env.outQueueUrl,messageBody);
         }
         log.info("message sent to server: "+messageBody);
+
+        if (env.terminate) {
+            sendTerminationMessage();
+        }
+    }
+
+    private void sendTerminationMessage() {
+        String messageBody = LocalToManagerSQSProtocol.newTerminateMessage(env.inQueueName);
+        boolean messageSent = SQSUtils.sendMessage(env.outQueueUrl, messageBody);
+        if (!messageSent) {
+			sqsMessageNotSent(env.outQueueUrl, messageBody);
+		}
+        log.info("Termination message sent to server: " + messageBody);
     }
 
     private  Bucket getOrCreateBucketByName(String bucketName) {

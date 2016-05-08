@@ -77,21 +77,25 @@ public class Main {
 
 					LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
 
-					commandFromQueue.addWorkerStatisticsHandler(workersStatistics);
-					setExpectedNumberOfWorkers(commandFromQueue.getTotalNumOfRequiredWorkers());
-
-					executor.execute(
-							() -> {
-								commandFromQueue.run();
-								messageKeepAlive.interrupt();
-								SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
-								tasks.release();
-							});
 					if (commandFromQueue.shouldTerminate()) {
 						if (commandFromQueue instanceof NewTaskCommand) {
 							lastSqsName = ((NewTaskCommand) commandFromQueue).getSqsName();
 						}
+						messageKeepAlive.interrupt();
+						tasks.release();
 						break;
+					}
+					else {
+						commandFromQueue.addWorkerStatisticsHandler(workersStatistics);
+						setExpectedNumberOfWorkers(commandFromQueue.getTotalNumOfRequiredWorkers());
+
+						executor.execute(
+								() -> {
+									commandFromQueue.run();
+									messageKeepAlive.interrupt();
+									SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
+									tasks.release();
+								});
 					}
 				}
 			} catch (MalformedMessageException e){
@@ -132,6 +136,9 @@ public class Main {
 						"NO_STATS_FILE"
 				);
 			}
+		}
+		else {
+			logger.error("lastSqsName is null");
 		}
 	}
 

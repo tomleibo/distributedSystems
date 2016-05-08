@@ -6,6 +6,7 @@ mvn_profile=production
 
 mvn --activate-profiles ${mvn_profile} --file common/pom.xml clean
 mvn --activate-profiles ${mvn_profile} --file common/pom.xml compile assembly:single -DskipTests
+mvn --activate-profiles ${mvn_profile} --file common/pom.xml install assembly:single -DskipTests
 cp common/target/common-1.0-SNAPSHOT-jar-with-dependencies.jar production
 
 mvn --activate-profiles ${mvn_profile} --file manager/pom.xml clean
