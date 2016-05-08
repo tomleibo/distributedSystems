@@ -29,6 +29,7 @@ import static com.bgu.dsp.awsUtils.Utils.MANAGER_TO_WORKERS_QUEUE_NAME;
 public class NewTaskCommand implements LocalToManagerCommand {
 
 	final static Logger logger = Logger.getLogger(NewTaskCommand.class);
+	private static final int MAX_WORKERS = 17;
 	private final String sqsName;
 	private final String bucketName;
 	private final String key;
@@ -261,7 +262,11 @@ public class NewTaskCommand implements LocalToManagerCommand {
 			logger.error("Failed to read tweets file", e);
 			return 0;
 		}
-		return (int)Math.ceil(numberOfLines / (double)tasksPerWorker);
+
+		// AWS limits us with the maximal number of instances, so never return more then MAX_WORKERS
+		return Math.min(
+				(int)Math.ceil(numberOfLines / (double)tasksPerWorker),
+				MAX_WORKERS);
 	}
 
 	private int countLines() throws IOException {
