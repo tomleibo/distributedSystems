@@ -26,8 +26,9 @@ public class SqsLooper implements Runnable {
 
     private void finish() {
         log.info("deleting queue and shutting down .");
-        sendTerminationMessage();
+        env.heartBit.stop();
         SQSUtils.deleteQueue(env.inQueueUrl);
+        sendTerminationMessage();
         env.executor.shutdownNow();
     }
     private void sendTerminationMessage() {

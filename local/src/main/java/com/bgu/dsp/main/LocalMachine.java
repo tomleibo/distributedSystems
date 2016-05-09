@@ -39,7 +39,9 @@ public class LocalMachine implements Runnable{
     }
 
     private  void startHeartBit() {
-        env.executor.execute(new HeartBit() { });
+        HeartBit heartbit = new HeartBit();
+        env.heartBit=heartbit;
+        env.executor.execute(heartbit);
     }
 
 
@@ -134,19 +136,20 @@ public class LocalMachine implements Runnable{
         System.exit(1);
     }
 
-    private class HeartBit implements Runnable {
+    public class HeartBit implements Runnable {
         final int SLEEP_CYCLE = 1000*10;
+        private boolean shouldStop=false;
 
         @Override
         public void run() {
             try {
                 log.info("heartbit started.");
-                while (true) {
+                while (!shouldStop) {
                     try {
                         if (!isManagerNodeActive()) {
                             log.info("Heartbeat waiting for the manager to become active");
                             Thread.sleep(1000 * 120);
-                            if (!isManagerNodeActive()) {
+                            if (!isManagerNodeActive() || shouldStop()) {
                                 log.warn("Manager is not active for 2 minutes, heartbeat is activating the manager");
                                 startManager();
                             }
@@ -162,6 +165,14 @@ public class LocalMachine implements Runnable{
                 log.info("heartbit interrupted",e);
             }
 
+        }
+
+        private boolean shouldStop() {
+            return shouldStop;
+        }
+
+        public void stop(){
+            shouldStop=true;
         }
     }
 }

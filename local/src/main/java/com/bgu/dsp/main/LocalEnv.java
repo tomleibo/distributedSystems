@@ -25,6 +25,7 @@ public class LocalEnv {
     public ExecutorService executor = Executors.newFixedThreadPool(N_THREADS);
     public String outQueueUrl;
     public String inQueueUrl;
+    public LocalMachine.HeartBit heartBit;
 
     public static LocalEnv build() {
         if (instance==null) {
@@ -40,8 +41,5 @@ public class LocalEnv {
     public static LocalEnv get() {
         return instance;
     }
-
-
-
 
 }
