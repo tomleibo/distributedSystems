@@ -66,19 +66,9 @@ public class LocalMachine implements Runnable{
         }
         log.info("message sent to server: "+messageBody);
 
-        if (env.terminate) {
-            sendTerminationMessage();
-        }
     }
 
-    private void sendTerminationMessage() {
-        String messageBody = LocalToManagerSQSProtocol.newTerminateMessage(env.inQueueName);
-        boolean messageSent = SQSUtils.sendMessage(env.outQueueUrl, messageBody);
-        if (!messageSent) {
-			sqsMessageNotSent(env.outQueueUrl, messageBody);
-		}
-        log.info("Termination message sent to server: " + messageBody);
-    }
+
 
     private  Bucket getOrCreateBucketByName(String bucketName) {
         Bucket bucket=null;

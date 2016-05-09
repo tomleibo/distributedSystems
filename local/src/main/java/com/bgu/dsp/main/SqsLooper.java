@@ -6,6 +6,7 @@ import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.awsUtils.Utils;
 import com.bgu.dsp.common.protocol.MalformedMessageException;
+import com.bgu.dsp.common.protocol.localtomanager.LocalToManagerSQSProtocol;
 import com.bgu.dsp.common.protocol.managertolocal.ManagerToLocalSqsProtocol;
 import com.bgu.dsp.common.protocol.managertolocal.TweetsToHtmlConverter;
 import org.apache.log4j.Logger;
@@ -25,8 +26,20 @@ public class SqsLooper implements Runnable {
 
     private void finish() {
         log.info("deleting queue and shutting down .");
+        sendTerminationMessage();
         SQSUtils.deleteQueue(env.inQueueUrl);
         env.executor.shutdownNow();
+    }
+    private void sendTerminationMessage() {
+        String messageBody = LocalToManagerSQSProtocol.newTerminateMessage(env.inQueueName);
+        boolean messageSent = SQSUtils.sendMessage(env.outQueueUrl, messageBody);
+        if (!messageSent) {
+            terminationMessageNotSent(env.outQueueUrl, messageBody);
+        }
+    }
+
+    private void terminationMessageNotSent(String outQueueUrl, String messageBody) {
+        log.error("termination message to manager not sent.");
     }
 
     @Override
