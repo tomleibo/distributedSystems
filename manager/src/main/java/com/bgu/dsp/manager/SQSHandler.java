@@ -1,5 +1,6 @@
 package com.bgu.dsp.manager;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import org.apache.log4j.Logger;
@@ -13,6 +14,12 @@ public class SQSHandler {
 	private final static Logger logger = Logger.getLogger(SQSHandler.class);
 
 	public Message getCommandFromQueue(String queueURL) throws MalformedMessageException {
-		return SQSUtils.getMessage(queueURL, 20);
+		try {
+            return SQSUtils.getMessage(queueURL, 20);
+        }
+        catch(AmazonClientException e) {
+            logger.error("error while fetching message from sqs queue",e);
+            return null;
+        }
 	}
 }

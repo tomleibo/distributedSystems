@@ -1,5 +1,6 @@
 package com.bgu.dsp.manager;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.EC2Utils;
 import com.bgu.dsp.awsUtils.S3Utils;
@@ -49,13 +50,25 @@ public class Main {
 		// The semaphore doesn't need to be fair because only one thread is using it
 		Semaphore tasks = new Semaphore(Utils.NUM_OF_MANAGER_TASKS, false);
 
-		S3Utils.createBucket(Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
+		try {
+            S3Utils.createBucket(Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
+        }
+        catch (AmazonClientException e) {
+            logger.fatal("Could not create bucket for output. exiting",e);
+            System.exit(1);
+        }
+
 		logger.warn("Manager created bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME + " and will not delete it.\n" +
 				"This bucket is meant to save results and deliver them to the local application.");
 		// This queue should be already created by the local
-		String localToManagerQueueUrl = SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
-
-		SQSUtils.createQueue(MANAGER_TO_WORKERS_QUEUE_NAME);
+        String localToManagerQueueUrl = SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
+        try {
+            SQSUtils.createQueue(MANAGER_TO_WORKERS_QUEUE_NAME);
+        }
+        catch(AmazonClientException e) {
+            logger.fatal("Could not create queue for output. exiting",e);
+            System.exit(1);
+        }
 
 		Thread workersMonitor = new Thread(new WorkersMonitor());
 		workersMonitor.start();
@@ -63,6 +76,7 @@ public class Main {
 		ExecutorService executor = Executors.newCachedThreadPool();
 		SQSHandler sqsHandler = new SQSHandler();
 		String lastSqsName = null;
+
 		while (true){
 			try {
 				Message messageFromQueue = sqsHandler.getCommandFromQueue(localToManagerQueueUrl);
@@ -122,20 +136,23 @@ public class Main {
 	private static void sendStatistics(String lastSqsName) {
 		if (lastSqsName != null) {
 			String fileKey = writeWorkersStatisticsToS3(workersStatistics.toString());
-
-			if (fileKey != null) {
-				// filekey == null means failure to upload the stats file to s3
-				SQSUtils.sendMessage(
-						SQSUtils.getQueueUrlByName(lastSqsName),
-						fileKey
-				);
-			}
-			else {
-				SQSUtils.sendMessage(
-						SQSUtils.getQueueUrlByName(lastSqsName),
-						"NO_STATS_FILE"
-				);
-			}
+            try {
+                if (fileKey != null) {
+                    // filekey == null means failure to upload the stats file to s3
+                    SQSUtils.sendMessage(
+                            SQSUtils.getQueueUrlByName(lastSqsName),
+                            fileKey
+                    );
+                } else {
+                    SQSUtils.sendMessage(
+                            SQSUtils.getQueueUrlByName(lastSqsName),
+                            "NO_STATS_FILE"
+                    );
+                }
+            }
+            catch(AmazonClientException e) {
+                logger.error("Exception thrown while sending statistics message to SQS queue.",e);
+            }
 		}
 		else {
 			logger.error("lastSqsName is null");
@@ -149,9 +166,14 @@ public class Main {
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
 			FileUtils.writeStringToFile(statsFile, stats);
 			String fileKey = "statistics_" + timeStamp + ".txt";
-			S3Utils.uploadFile(MANAGER_TO_LOCAL_BUCKET_NAME,
-					fileKey,
-					statsFile);
+			try {
+                S3Utils.uploadFile(MANAGER_TO_LOCAL_BUCKET_NAME,
+                        fileKey,
+                        statsFile);
+            }
+            catch(AmazonClientException e) {
+                logger.error("failed to upload file to S3",e);
+            }
 			return fileKey;
 
 		} catch (Exception e) {

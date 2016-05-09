@@ -1,6 +1,7 @@
 package com.bgu.dsp.manager;
 
 import com.amazonaws.AbortedException;
+import com.amazonaws.AmazonClientException;
 import com.bgu.dsp.awsUtils.EC2Utils;
 import org.apache.log4j.Logger;
 
@@ -24,6 +25,11 @@ public class WorkersMonitor implements Runnable{
 				logger.info(interuptedMessage, e);
 				break;
 			}
+            catch(AmazonClientException ae) {
+                logger.error("Exception thrown while counting workers",ae);
+                //failing silently for another attempt
+                continue;
+            }
 			int expectedNumberOfWorkers = Main.getExpectedNumberOfWorkers();
 			if (workers < expectedNumberOfWorkers) {
 				logger.info("Expected " + expectedNumberOfWorkers + ", but found " + workers + " workers.\n" +
