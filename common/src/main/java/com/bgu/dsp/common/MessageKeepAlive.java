@@ -1,5 +1,6 @@
 package com.bgu.dsp.common;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import org.apache.log4j.Logger;
@@ -25,7 +26,12 @@ public class MessageKeepAlive implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
-			SQSUtils.extendMessageVisibilityTimeout(this.message, this.queueUrl, this.timeoutSeconds + 20);
+			try {
+                SQSUtils.extendMessageVisibilityTimeout(this.message, this.queueUrl, this.timeoutSeconds + 20);
+            }
+            catch(AmazonClientException e) {
+                logger.error("Exception thrown while extending msg visibility timeout.",e);
+            }
 			try {
 				Thread.sleep(this.timeoutSeconds * 1000);
 			} catch (InterruptedException e) {

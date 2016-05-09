@@ -1,5 +1,7 @@
 package com.bgu.dsp.worker;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.sqs.model.Message;
 import com.bgu.dsp.awsUtils.SQSUtils;
 import com.bgu.dsp.awsUtils.Utils;
@@ -46,7 +48,12 @@ public class Worker implements Runnable{
                 if (cmd != null) {
                     cmd.execute( new NLPParser(), this.uuid);
                     msgKeepAlive.interrupt();
-                    SQSUtils.deleteMessage(inQueueUrl, msg);
+                    try {
+                        SQSUtils.deleteMessage(inQueueUrl, msg);
+                    }
+                    catch(AmazonClientException e) {
+                        log.error("delete message failed.",e);
+                    }
                 }
             }
         }
@@ -57,7 +64,13 @@ public class Worker implements Runnable{
      * @return msg body if found a message in the queue or null if couldn't find a message in the queue
      */
     private Message getSqsMessageFromQueue() {
-        return SQSUtils.getMessage(inQueueUrl, 20);
+        try {
+            return SQSUtils.getMessage(inQueueUrl, 20);
+        }
+        catch(AmazonClientException e) {
+            log.error("Exception thrown while fetching message from sqs queue.",e);
+            return null;
+        }
     }
 
 }
