@@ -89,7 +89,7 @@ public class S3Utils {
 
     }
 
-    public static void emptyAnddeleteBucket(String bucketName) {
+    public static void emptyAnddeleteBucket(String bucketName,boolean justEmpty) {
         try {
             System.out.println("Deleting S3 bucket: " + bucketName);
             ObjectListing objectListing = s3.listObjects(bucketName);
@@ -111,7 +111,9 @@ public class S3Utils {
                 S3VersionSummary s = (S3VersionSummary)iterator.next();
                 s3.deleteVersion(bucketName, s.getKey(), s.getVersionId());
             }
-            s3.deleteBucket(bucketName);
+            if (!justEmpty) {
+                s3.deleteBucket(bucketName);
+            }
 
 
         } catch (AmazonServiceException ase) {

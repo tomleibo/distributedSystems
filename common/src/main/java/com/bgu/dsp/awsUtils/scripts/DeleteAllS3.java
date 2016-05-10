@@ -9,7 +9,7 @@ import com.bgu.dsp.awsUtils.S3Utils;
 public class DeleteAllS3 {
     public static void main(String[] args) {
         for (Bucket b : S3Utils.getBuckets()){
-            S3Utils.emptyAnddeleteBucket(b.getName());
+            S3Utils.emptyAnddeleteBucket(b.getName(),true);
         }
     }
 }

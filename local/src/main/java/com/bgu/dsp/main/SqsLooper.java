@@ -91,13 +91,20 @@ public class SqsLooper implements Runnable {
     }
 
     private String downloadStatsFile() {
-        // TODO how to know when did the manager has finished to upload the statistics file?
         Message message=null;
         try {
-            message = SQSUtils.getMessage(env.inQueueUrl, 20);
+            while (true) {
+                message = SQSUtils.getMessage(env.inQueueUrl, 0);
+                if (message==null) {
+                    Thread.sleep(SQS_LOOP_SLEEP_DURATION_MILLIS);
+                }
+            }
         }
         catch(AmazonClientException e) {
             log.error("Failed to fetch statistics file location sqs message"+e);
+        }
+        catch(InterruptedException inE) {
+            log.info("");
         }
 
         if (message != null && (! "NO_STATS_FILE".equals(message.getBody()))) {
