@@ -96,6 +96,7 @@ public class Main {
 							lastSqsName = ((NewTaskCommand) commandFromQueue).getSqsName();
 						}
 						messageKeepAlive.interrupt();
+						SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
 						tasks.release();
 						break;
 					}
