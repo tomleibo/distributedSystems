@@ -270,7 +270,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 			throw new RuntimeException();
 		}
 
-		return "task_queue_" + this.taskID.toString();
+		return "task_queue_" + UUID.randomUUID().toString();
 	}
 
 
