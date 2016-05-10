@@ -33,9 +33,13 @@ to be found on the computer that runs the jar, under `aws-java-sdk-1.10.64` dire
 After building the jars using [`scripts/build.sh`](scripts/build.sh), you need
 to deploy the jars to s3, for that we are using [AWS CLI](https://aws.amazon.com/cli/)
 
-## Production
-- Instead of uploading the jars, we store them in an S3 bucket under the `S3_JARS_BUCKET`.
-
+## Running
+- In order to run the local machine:
+  ```{shell}
+  export DSP_MODE=DEV
+  java -jar yourjar.jar inputFileName outputFileName n
+  ```
+  
 ## Mocks
 - We use [fake_sqs](https://github.com/iain/fake_sqs) to mock AWS SQS,
 follow the instruction in the repo to install
