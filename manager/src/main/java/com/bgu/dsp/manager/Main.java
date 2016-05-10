@@ -47,91 +47,114 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		// The semaphore doesn't need to be fair because only one thread is using it
-		Semaphore tasks = new Semaphore(Utils.NUM_OF_MANAGER_TASKS, false);
-
 		try {
-            S3Utils.createBucket(Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
-        }
-        catch (AmazonClientException e) {
-            logger.fatal("Could not create bucket for output. exiting",e);
-            System.exit(1);
-        }
+			// The semaphore doesn't need to be fair because only one thread is using it
+			Semaphore tasks = new Semaphore(Utils.NUM_OF_MANAGER_TASKS, false);
 
-		logger.warn("Manager created bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME + " and will not delete it.\n" +
-				"This bucket is meant to save results and deliver them to the local application.");
-		// This queue should be already created by the local
-        String localToManagerQueueUrl = SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
-        try {
-            SQSUtils.createQueue(MANAGER_TO_WORKERS_QUEUE_NAME);
-        }
-        catch(AmazonClientException e) {
-            logger.fatal("Could not create queue for output. exiting",e);
-            System.exit(1);
-        }
-
-		Thread workersMonitor = new Thread(new WorkersMonitor());
-		workersMonitor.start();
-
-		ExecutorService executor = Executors.newCachedThreadPool();
-		SQSHandler sqsHandler = new SQSHandler();
-		String lastSqsName = null;
-
-		while (true){
 			try {
-				Message messageFromQueue = sqsHandler.getCommandFromQueue(localToManagerQueueUrl);
-
-				if (messageFromQueue!= null) {
-
-					// Make sure that no one else is taking the message as long as this manager is working on it
-					Thread messageKeepAlive = new Thread(new MessageKeepAlive(messageFromQueue, localToManagerQueueUrl, 30));
-					messageKeepAlive.start();
-
-					tasks.acquireUninterruptibly();
-
-					LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
-
-					if (commandFromQueue.shouldTerminate()) {
-						if (commandFromQueue instanceof NewTaskCommand) {
-							lastSqsName = ((NewTaskCommand) commandFromQueue).getSqsName();
-						}
-						messageKeepAlive.interrupt();
-						SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
-						tasks.release();
-						break;
-					}
-					else {
-						commandFromQueue.addWorkerStatisticsHandler(workersStatistics);
-						setExpectedNumberOfWorkers(commandFromQueue.getTotalNumOfRequiredWorkers());
-
-						executor.execute(
-								() -> {
-									commandFromQueue.run();
-									messageKeepAlive.interrupt();
-									SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
-									tasks.release();
-								});
-					}
-				}
-			} catch (MalformedMessageException e){
-				logger.error(e);
+				S3Utils.createBucket(Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
+			} catch (AmazonClientException e) {
+				logger.fatal("Could not create bucket for output. exiting", e);
+				System.exit(1);
 			}
+
+			logger.warn("Manager created bucket " + Utils.MANAGER_TO_LOCAL_BUCKET_NAME + " and will not delete it.\n" +
+					"This bucket is meant to save results and deliver them to the local application.");
+
+			String localToManagerQueueUrl = getLocalToManagerQueueUrl();
+
+
+			try {
+				SQSUtils.createQueue(MANAGER_TO_WORKERS_QUEUE_NAME);
+			} catch (AmazonClientException e) {
+				logger.fatal("Could not create queue for output. exiting", e);
+				System.exit(1);
+			}
+
+			Thread workersMonitor = new Thread(new WorkersMonitor());
+			workersMonitor.start();
+
+			ExecutorService executor = Executors.newCachedThreadPool();
+			SQSHandler sqsHandler = new SQSHandler();
+			String lastSqsName = null;
+
+			while (true) {
+				try {
+					Message messageFromQueue = sqsHandler.getCommandFromQueue(localToManagerQueueUrl);
+
+					if (messageFromQueue != null) {
+
+						// Make sure that no one else is taking the message as long as this manager is working on it
+						Thread messageKeepAlive = new Thread(new MessageKeepAlive(messageFromQueue, localToManagerQueueUrl, 30));
+						messageKeepAlive.start();
+
+						tasks.acquireUninterruptibly();
+
+						LocalToManagerCommand commandFromQueue = LocalToManagerSQSProtocol.parse(messageFromQueue.getBody());
+
+						if (commandFromQueue.shouldTerminate()) {
+							if (commandFromQueue instanceof NewTaskCommand) {
+								lastSqsName = ((NewTaskCommand) commandFromQueue).getSqsName();
+							}
+							messageKeepAlive.interrupt();
+							SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
+							tasks.release();
+							break;
+						} else {
+							commandFromQueue.addWorkerStatisticsHandler(workersStatistics);
+							setExpectedNumberOfWorkers(commandFromQueue.getTotalNumOfRequiredWorkers());
+
+							executor.execute(
+									() -> {
+										commandFromQueue.run();
+										messageKeepAlive.interrupt();
+										SQSUtils.deleteMessage(localToManagerQueueUrl, messageFromQueue);
+										tasks.release();
+									});
+						}
+					}
+				} catch (MalformedMessageException e) {
+					logger.error(e);
+				}
+			}
+
+			logger.info("Shutting down executor, waiting for all tasks to be completed");
+			waitForAllTasks(executor);
+
+			logger.info("Shutting down workers monitor");
+			workersMonitor.interrupt();
+
+			logger.info("Manager is now shutting down all the workers");
+			EC2Utils.terminateAllWorkers();
+
+			sendStatistics(lastSqsName);
+
+			logger.info(workersStatistics.toString());
+			logger.info("All tasks completed. Manager is exiting");
+		} catch (Throwable t){
+			logger.fatal(t);
+		}
+		finally {
+			EC2Utils.terminateManager();
 		}
 
-		logger.info("Shutting down executor, waiting for all tasks to be completed");
-		waitForAllTasks(executor);
+	}
 
-		logger.info("Shutting down workers monitor");
-		workersMonitor.interrupt();
-
-		logger.info("Manager is now shutting down all the workers");
-		EC2Utils.terminateAllWorkers();
-
-		sendStatistics(lastSqsName);
-
-		logger.info(workersStatistics.toString());
-		logger.info("All tasks completed. Manager is exiting");
-
+	private static String getLocalToManagerQueueUrl() {
+		String localToManagerQueueUrl;
+		while (true) {
+			try {
+				// This queue should be already created by the local
+				localToManagerQueueUrl = SQSUtils.getQueueUrlByName(LOCAL_TO_MANAGER_QUEUE_NAME);
+				break;
+			} catch (Exception e) {
+				logger.warn(
+						"Could not find localToManager queue, available quesues:\n" +
+								SQSUtils.listQueues() + "\n",
+						e);
+			}
+		}
+		return localToManagerQueueUrl;
 	}
 
 	private static void sendStatistics(String lastSqsName) {
