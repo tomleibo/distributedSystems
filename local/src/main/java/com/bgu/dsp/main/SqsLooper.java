@@ -54,12 +54,12 @@ public class SqsLooper implements Runnable {
             }
             if (msg!=null) {
                 try {
-                    TweetsToHtmlConverter converter =ManagerToLocalSqsProtocol.parse(msg.getBody());
+                    TweetsToHtmlConverter converter = ManagerToLocalSqsProtocol.parse(msg.getBody());
                     converter.execute(env.outputFileName);
                     if (env.terminate) {
                         // Expect a statistics file
-                        String statsFile = downloadStatsFile();
                         sendTerminationMessage();
+                        String statsFile = downloadStatsFile();
                         if (statsFile != null) {
                             log.info("Stats file located at " + statsFile);
                         }
