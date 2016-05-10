@@ -35,8 +35,9 @@ to deploy the jars to s3, for that we are using [AWS CLI](https://aws.amazon.com
 
 ## Running
 - In order to run the local machine:
-  ```{shell}
+  ```
   export DSP_MODE=DEV
+  
   java -jar yourjar.jar inputFileName outputFileName n
   ```
   
