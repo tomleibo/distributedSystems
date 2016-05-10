@@ -56,6 +56,7 @@ public class SqsLooper implements Runnable {
                 try {
                     TweetsToHtmlConverter converter = ManagerToLocalSqsProtocol.parse(msg.getBody());
                     converter.execute(env.outputFileName);
+                    SQSUtils.deleteMessage(env.inQueueUrl,msg);
                     if (env.terminate) {
                         // Expect a statistics file
                         sendTerminationMessage();
@@ -93,10 +94,11 @@ public class SqsLooper implements Runnable {
         Message message=null;
         try {
             while (true) {
-                message = SQSUtils.getMessage(env.inQueueUrl, 0);
+                message = SQSUtils.getMessage(env.inQueueUrl, 10);
                 if (message==null) {
                     Thread.sleep(SQS_LOOP_SLEEP_DURATION_MILLIS);
                 }
+                SQSUtils.deleteMessage(env.inQueueUrl,message);
             }
         }
         catch(AmazonClientException e) {
