@@ -52,7 +52,7 @@ public class S3Tests {
 
     @Test
     public void deleteBuckets(){
-        List<String> strings = S3Utils.deleteAllS3(true);
+        List<String> strings = S3Utils.deleteAllS3();
         assertFalse(strings.contains("dsp-jars"));
     }
 }
