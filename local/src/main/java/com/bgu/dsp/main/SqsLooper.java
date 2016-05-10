@@ -17,7 +17,6 @@ import java.io.IOException;
 public class SqsLooper implements Runnable {
     final static Logger log = Logger.getLogger(SqsLooper.class);
     private static final long SQS_LOOP_SLEEP_DURATION_MILLIS = 1000 * 10;
-    private static final long DELAY_BETWEEN_TERMINATE_MESSAGE_AND_SHUTDOWN = 1000 * 60;
     private final LocalEnv env;
 
     public SqsLooper() {
@@ -28,7 +27,6 @@ public class SqsLooper implements Runnable {
         log.info("deleting queue and shutting down .");
         env.heartBit.stop();
         SQSUtils.deleteQueue(env.inQueueUrl);
-        sendTerminationMessage();
         env.executor.shutdownNow();
     }
     private void sendTerminationMessage() {
@@ -61,6 +59,7 @@ public class SqsLooper implements Runnable {
                     if (env.terminate) {
                         // Expect a statistics file
                         String statsFile = downloadStatsFile();
+                        sendTerminationMessage();
                         if (statsFile != null) {
                             log.info("Stats file located at " + statsFile);
                         }
