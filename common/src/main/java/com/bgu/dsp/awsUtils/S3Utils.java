@@ -4,18 +4,13 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.*;
-import com.amazonaws.util.Base64;
-import org.apache.commons.codec.binary.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -105,7 +100,7 @@ public class S3Utils {
                 } else {
                     break;
                 }
-            };
+            }
             VersionListing list = s3.listVersions(new ListVersionsRequest().withBucketName(bucketName));
             for ( Iterator<?> iterator = list.getVersionSummaries().iterator(); iterator.hasNext(); ) {
                 S3VersionSummary s = (S3VersionSummary)iterator.next();
@@ -243,4 +238,18 @@ public class S3Utils {
         s3.deleteObject(bucketName, key);
     }
 
+    public static List<String> deleteAllS3(boolean justEmpty) {
+        List<String> deletedList = new ArrayList<>();
+        List<String> exclude = new ArrayList<>();
+        exclude.add("dsp-jars");
+
+        for (Bucket b : S3Utils.getBuckets()){
+            String bucketName = b.getName();
+            if (!exclude.contains(bucketName)) {
+                S3Utils.emptyAnddeleteBucket(bucketName, justEmpty);
+                deletedList.add(bucketName);
+            }
+        }
+        return deletedList;
+    }
 }

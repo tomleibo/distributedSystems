@@ -1,6 +1,7 @@
 package com.bgu.dsp.tests;
 
 import com.amazonaws.services.s3.model.Bucket;
+import com.bgu.dsp.awsUtils.S3Utils;
 import org.junit.Test;
 
 import java.io.*;
@@ -47,5 +48,11 @@ public class S3Tests {
         writer.close();
 
         return file;
+    }
+
+    @Test
+    public void deleteBuckets(){
+        List<String> strings = S3Utils.deleteAllS3(true);
+        assertFalse(strings.contains("dsp-jars"));
     }
 }
