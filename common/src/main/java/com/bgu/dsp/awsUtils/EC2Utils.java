@@ -161,7 +161,16 @@ public class EC2Utils {
         List<Tag> tags = new LinkedList<>();
         tags.add(new Tag("Name", "worker"));
         CreateTagsRequest createTagsRequest = new CreateTagsRequest(instancesIds, tags);
-        ec2.createTags(createTagsRequest);
+        try {
+            ec2.createTags(createTagsRequest);
+        }catch (Exception e){
+            logger.warn("When trying to tag ec2 workers, retrying ",e);
+            try {
+                Thread.sleep(20*1000);
+            } catch (InterruptedException ignored) {}
+
+            ec2.createTags(createTagsRequest);
+        }
     }
 
     /**

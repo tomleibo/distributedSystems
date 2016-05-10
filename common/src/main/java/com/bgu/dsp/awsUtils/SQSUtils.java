@@ -2,7 +2,6 @@ package com.bgu.dsp.awsUtils;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
@@ -92,6 +91,11 @@ public class SQSUtils {
     public static String getQueueUrlByName (String name) {
 
         return sqs.getQueueUrl(name).getQueueUrl();
+    }
+    public static List<String> listQueues(){
+        ListQueuesResult listQueuesResult = sqs.listQueues();
+
+        return listQueuesResult.getQueueUrls();
     }
 
 
