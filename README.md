@@ -19,7 +19,7 @@ role with sufficient permissions. This allows us to use
 as described in [Providing AWS Credentials in the AWS SDK for Java](http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html).
 - In order to run the local application, first of all define your credentials as explained in [AWS documentation](http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html#using-the-default-credential-provider-chain)
 
-##Compiling 
+## Compiling 
 - We used [Maven](https://maven.apache.org/) as our build tool for this project. 
 In order to compile the project use [`scripts/build.sh`](scripts/build.sh).
 - We use maven profiles, the `dev` profile is active by default and includes aws jars.
