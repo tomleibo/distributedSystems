@@ -98,7 +98,10 @@ public class SqsLooper implements Runnable {
                 if (message==null) {
                     Thread.sleep(SQS_LOOP_SLEEP_DURATION_MILLIS);
                 }
-                SQSUtils.deleteMessage(env.inQueueUrl,message);
+                else {
+                    SQSUtils.deleteMessage(env.inQueueUrl,message);
+                    break;
+                }
             }
         }
         catch(AmazonClientException e) {
