@@ -238,15 +238,25 @@ public class S3Utils {
         s3.deleteObject(bucketName, key);
     }
 
-    public static List<String> deleteAllS3(boolean justEmpty) {
+    public static List<String> deleteAllS3() {
         List<String> deletedList = new ArrayList<>();
         List<String> exclude = new ArrayList<>();
         exclude.add("dsp-jars");
+        List<String> justEmpty = new ArrayList<>();
+        justEmpty.add(Utils.LOCAL_TO_MANAGER_BUCKET_NAME);
+        justEmpty.add(Utils.MANAGER_TO_LOCAL_BUCKET_NAME);
+
+
 
         for (Bucket b : S3Utils.getBuckets()){
             String bucketName = b.getName();
             if (!exclude.contains(bucketName)) {
-                S3Utils.emptyAnddeleteBucket(bucketName, justEmpty);
+                if (justEmpty.contains(bucketName)) {
+                    S3Utils.emptyAnddeleteBucket(bucketName,true);
+                }
+                else{
+                    S3Utils.emptyAnddeleteBucket(bucketName,false);
+                }
                 deletedList.add(bucketName);
             }
         }
