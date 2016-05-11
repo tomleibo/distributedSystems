@@ -149,7 +149,12 @@ public class EC2Utils {
 
         List<String> instancesIds = runInstancesResult.getReservation().getInstances().stream().map(Instance::getInstanceId).collect(Collectors.toList());
 
-        tagWorkers(instancesIds);
+        try {
+            tagWorkers(instancesIds);
+        }
+        catch (Exception e) {
+            logger.error("Exception while tagging the workers", e);
+        }
         return instancesIds;
     }
 
@@ -268,7 +273,18 @@ public class EC2Utils {
         RunInstancesResult runInstancesResult = ec2.runInstances(request);
 
         String instancesIds = runInstancesResult.getReservation().getInstances().get(0).getInstanceId();
-        tagManager(instancesIds);
+
+        // make sure that the instance starts
+        try {
+            Thread.sleep(5*1000);
+        } catch (InterruptedException e) {}
+
+        try {
+            tagManager(instancesIds);
+        }
+        catch (Exception e){
+            logger.error("Got exception while tagging the manager, continuing", e);
+        }
         return instancesIds;
     }
 
@@ -331,7 +347,16 @@ public class EC2Utils {
         tags.add(new Tag("Name", "manager"));
 
         CreateTagsRequest createTagsRequest = new CreateTagsRequest(instances, tags);
-        ec2.createTags(createTagsRequest);
+        try {
+            ec2.createTags(createTagsRequest);
+        }
+        catch (Exception e){
+            logger.warn("got exception while tagging workers, trying again");
+            try {
+                Thread.sleep(10 * 1000);
+            } catch (InterruptedException e1) {}
+            ec2.createTags(createTagsRequest);
+        }
 
     }
 

@@ -1,12 +1,14 @@
 package com.bgu.dsp.common.protocol.managertolocal;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.bgu.dsp.awsUtils.S3Utils;
 import com.bgu.dsp.common.protocol.managertolocal.serialize.IllegalSerializedObjectException;
 import com.bgu.dsp.common.protocol.managertolocal.serialize.TwitsReader;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 
 
@@ -102,8 +104,10 @@ public class TweetsToHtmlConverter {
             log.debug("Output file writing took "+(System.currentTimeMillis()-startTime)+" milliseconds.");
             tmpTweetFile.delete();
         }
-        catch (IOException e) {
-            downloadFailed(e);
+        catch (AmazonS3Exception e) {
+            downloadFailed(e, bucketName, key);
+        } catch (IOException e) {
+            downloadFailed(e, bucketName, key);
         }
     }
 
@@ -219,8 +223,8 @@ public class TweetsToHtmlConverter {
     }
 
 
-    private void downloadFailed(IOException e) {
-        log.error("download failed.");
+    private void downloadFailed(Exception e, String bucketName, String key) {
+        log.error("download failed. key: " + key + " bucket: " + bucketName, e);
     }
 
     private void outputFileNotCreated(File file, IOException e) {

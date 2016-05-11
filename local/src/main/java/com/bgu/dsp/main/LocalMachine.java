@@ -24,9 +24,9 @@ public class LocalMachine implements Runnable{
 
     @Override
     public void run() {
-        uploadInputFile(LocalEnv.get().inputFileName);
+        String s3FileKey = uploadInputFile(LocalEnv.get().inputFileName);
         getQueueUrlOrCreateIfNotExists();
-        sendMessageToManager();
+        sendMessageToManager(s3FileKey);
         if (!isManagerNodeActive()) {
             log.info("Manager is not active. Stating the manager");
             startManager();
@@ -60,8 +60,8 @@ public class LocalMachine implements Runnable{
         env.inQueueUrl = SQSUtils.createQueue(env.inQueueName);
     }
 
-    private  void sendMessageToManager() {
-        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(env.inQueueName, LocalEnv.BUCKET_NAME, LocalEnv.INPUT_FILE_KEY,env.filesToWorkersRatio);
+    private  void sendMessageToManager(String s3FileKey) {
+        String messageBody = LocalToManagerSQSProtocol.newTaskMessage(env.inQueueName, LocalEnv.BUCKET_NAME, s3FileKey, env.filesToWorkersRatio);
         boolean messageSent = SQSUtils.sendMessage(env.outQueueUrl, messageBody);
         if (!messageSent) {
             sqsMessageNotSent(env.outQueueUrl,messageBody);
@@ -86,13 +86,15 @@ public class LocalMachine implements Runnable{
         return bucket;
     }
 
-    private  void uploadInputFile(String inputFileName) {
+    private String uploadInputFile(String inputFileName) {
         Bucket bucket = getOrCreateBucketByName(LocalEnv.BUCKET_NAME);
         File inFile = new File(inputFileName);
-        if (!S3Utils.uploadFile(bucket, LocalEnv.INPUT_FILE_KEY,inFile)){
+        String fileKey = UUID.randomUUID().toString();
+        if (!S3Utils.uploadFile(bucket, fileKey,inFile)){
             fileUploadFailed(inputFileName);
         }
         log.info("upload successful: "+inFile.getPath());
+        return fileKey;
     }
 
     private  void createSqsLooper() {
@@ -116,6 +118,7 @@ public class LocalMachine implements Runnable{
         }
         catch(AmazonClientException e) {
             log.error("Ec2 call failed. Failed to check if manager is up.",e);
+            return true; // do not upload new manager in case of exception because it might be related to network problems
         }
         if (ins==null) {
             return false;
@@ -149,7 +152,8 @@ public class LocalMachine implements Runnable{
                         if (!isManagerNodeActive()) {
                             log.info("Heartbeat waiting for the manager to become active");
                             Thread.sleep(1000 * 120);
-                            if (!isManagerNodeActive() || shouldStop()) {
+                            if ((!isManagerNodeActive()) &&
+                                    (!shouldStop())) {
                                 log.warn("Manager is not active for 2 minutes, heartbeat is activating the manager");
                                 startManager();
                             }

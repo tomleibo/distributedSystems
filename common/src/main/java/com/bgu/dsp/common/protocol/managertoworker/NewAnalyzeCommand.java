@@ -55,7 +55,7 @@ public class NewAnalyzeCommand implements ManagerToWorkerCommand {
 			tweet = analyzer.analyze(title, workerUUID);
 		} catch (Exception e) {
 			log.warn("Got an errornous tweet url " + getTweetUrl(), e);
-			tweet = new Tweet(e.getMessage(), workerUUID);
+			tweet = new Tweet(e.getMessage() + " " + getTweetUrl(), workerUUID);
 		}
 		uploadTweetToQueue(tweet);
 	}
