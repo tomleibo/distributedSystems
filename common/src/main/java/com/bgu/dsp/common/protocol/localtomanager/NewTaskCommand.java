@@ -101,7 +101,6 @@ public class NewTaskCommand implements LocalToManagerCommand {
 
 		String workersToManagerQueueName = null;
 		try {
-			startWorkers();
 			workersToManagerQueueName = createQueue();
 			int numberOfTweets = postTweetsToQueue(workersToManagerQueueName);
 			getRepliesAndUploadToS3(workersToManagerQueueName, numberOfTweets);
