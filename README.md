@@ -63,7 +63,7 @@ are possible in AWS
 - For the manager we used t2.micro.
 
 ## Time of tweetLinks.txt processing
-- It took --------- seconds for the program to run.
+- It took about 5 minutes for the program to run since the upload of the input file to the moment finished writing to output and statistics files.
 
 ## Rate of tasks to workers (N)
 - Because of the EC2 20 instance limit, we used tweetNumber/WorkerNumber.
