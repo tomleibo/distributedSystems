@@ -231,7 +231,7 @@ public class NewTaskCommand implements LocalToManagerCommand {
 		String line;
 
 		File file = S3Utils.downloadFile(bucketName, key);
-
+		logger.info("Reading tweets from " + file.getAbsolutePath());
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 			while ((line = br.readLine()) != null) {
 				UUID uuid = UUID.randomUUID();
