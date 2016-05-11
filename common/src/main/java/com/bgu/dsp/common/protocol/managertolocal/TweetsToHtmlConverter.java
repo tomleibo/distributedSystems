@@ -62,6 +62,7 @@ public class TweetsToHtmlConverter {
             "border: 1px solid transparent; /* No more visible border */\n" +
             "height: 30px; \n" +
             "transition: all 0.3s;  /* Simple transition for hover effect */\n" +
+            "word-wrap: break-word;"+
             "}\n" +
             "\n" +
             "th {\n" +
@@ -180,7 +181,10 @@ public class TweetsToHtmlConverter {
     private void writeHtmlHeader(PrintWriter out ) {
         String html = "<html><head><title>Distributed Systems Assignment 1</title>" +
                 "<style>\n"+css+"\n</style>\n"+
-                "</head><body><div class=\"header\"><table>";
+                "</head><body>\n" +
+                "<br><h1> Tweet Analysis Output</h1>\n" +
+                "<div class=\"header\">\n" +
+                "<table>";
         out.println(html);
 
     }
