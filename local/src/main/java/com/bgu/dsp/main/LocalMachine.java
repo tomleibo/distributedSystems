@@ -118,6 +118,7 @@ public class LocalMachine implements Runnable{
         }
         catch(AmazonClientException e) {
             log.error("Ec2 call failed. Failed to check if manager is up.",e);
+            return true; // do not upload new manager in case of exception because it might be related to network problems
         }
         if (ins==null) {
             return false;
@@ -151,7 +152,8 @@ public class LocalMachine implements Runnable{
                         if (!isManagerNodeActive()) {
                             log.info("Heartbeat waiting for the manager to become active");
                             Thread.sleep(1000 * 120);
-                            if (!isManagerNodeActive() || shouldStop()) {
+                            if ((!isManagerNodeActive()) &&
+                                    (!shouldStop())) {
                                 log.warn("Manager is not active for 2 minutes, heartbeat is activating the manager");
                                 startManager();
                             }
