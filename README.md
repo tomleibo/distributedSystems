@@ -3,7 +3,7 @@
 - Tom Leibovich 200456267
 
 ## DSP Modes
-For security and quality-of-code reasons our project can run with 3 modes:
+For security and quality-of-code reasons our project can run with 3 modes using the DSP_MODE system variable:
 - DEV_LOCAL - In this mode the project runs with a local mock of aws, which simulates ec2, s3 and SQS. Mock specification is detailed below.
 - DEV - In this mode the program runs with an .aws credentials file. This mode should be used to run the local application.
 - Default - In this mode, the program uses its predefined security groups. This mode is used on the EC2 instances and ensures that each instance can use only its granted privileges. This way is more secure than uploading your credential file to the cloud.
