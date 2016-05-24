@@ -73,7 +73,7 @@ are possible in AWS
 - No task in our project relies solely on RAM.
 - Each task is processed "one-at-a-time" with the support of S3 and SQS.
 
-## Persistence
+## Robustness
 Crash handling is performed throughout the project in all modules:
 - Manager crash - If a manager crashes the local module has a heartbit thread that checks if the manager is up, and if it crashed the heartbit will request a new manager.
 - Worker crash - A similar solution is implemented in the manager. If a worker crashes the WorkerMonitor will request a new worker instead.
