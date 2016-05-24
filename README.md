@@ -38,7 +38,7 @@ to deploy the jars to s3, for that we are using [AWS CLI](https://aws.amazon.com
   ```
   export DSP_MODE=DEV
   
-  java -jar yourjar.jar inputFileName outputFileName n
+  java -jar dsp1-1.0-SNAPSHOT-jar-with-dependencies.jar inputFileName outputFileName n
   ```
   
 ## Mocks
